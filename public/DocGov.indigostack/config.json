@@ -1,0 +1,50 @@
+{
+  "label" : "DocGov",
+  "services" : [
+    {
+      "config" : {
+        "build_order" : 100,
+        "display_order" : 999,
+        "id" : "B1F3",
+        "label" : "Nginx server",
+        "requested_version" : "1",
+        "sites" : [
+          {
+            "domain" : "docgov.local",
+            "id" : "94A3",
+            "linked_php" : "AD78",
+            "non_ssl_port" : "auto",
+            "reverse_proxy_http" : [
+              {
+                "backend_using_ssl" : true,
+                "domains" : [
+                  "docgov.local"
+                ],
+                "frontend_port" : "auto",
+                "frontend_ssl_port" : "auto"
+              }
+            ],
+            "ssl_port" : "auto",
+            "template" : "generic"
+          }
+        ],
+        "user_and_group" : "current"
+      },
+      "type" : "nginx"
+    },
+    {
+      "config" : {
+        "build_order" : 10,
+        "display_order" : 999,
+        "id" : "AD78",
+        "label" : "PHP service",
+        "port" : "auto",
+        "requested_version" : "8.3",
+        "user_and_group" : "current"
+      },
+      "type" : "php"
+    }
+  ],
+  "uuid" : "039052",
+  "version" : "120"
+}
