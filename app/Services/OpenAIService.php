@@ -18,4 +18,43 @@ class OpenAIService
 
         return $response->choices[0]->message->content;
     }
+
+    public function generateTitle($text)
+    {
+        $response = OpenAI::chat()->create([
+            'model' => 'gpt-4o-mini',
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are a helpful assistant that generates concise titles for documents in Dutch.'],
+                ['role' => 'user', 'content' => "Generate a short title for this content: {$text}"],
+            ],
+        ]);
+
+        return $response->choices[0]->message->content;
+    }
+    public function extractPeople($text)
+    {
+        $response = OpenAI::chat()->create([
+            'model' => 'gpt-4o-mini',
+            'messages' => [
+                ['role' => 'system', 'content' => 'Extract the names of people mentioned in this text. Provide a list of names.'],
+                ['role' => 'user', 'content' => $text],
+            ],
+        ]);
+
+        return array_map('trim', explode(',', $response->choices[0]->message->content));
+    }
+
+    public function extractKeywords($text)
+    {
+        $response = OpenAI::chat()->create([
+            'model' => 'gpt-4o-mini',
+            'messages' => [
+                ['role' => 'system', 'content' => 'Extract the most relevant keywords from this text for search optimization. Provide a list of keywords.'],
+                ['role' => 'user', 'content' => $text],
+            ],
+        ]);
+
+        return array_map('trim', explode(',', $response->choices[0]->message->content));
+    }
+
 }
