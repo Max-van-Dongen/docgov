@@ -28,10 +28,10 @@
 </div>
 
 <!-- Search Bar -->
-<form action="/results" method="get">
+<form action="/search" method="get">
 <div class="d-flex justify-content-center my-4">
     <div class="input-group w-50">
-        <input type="text" class="form-control rounded" placeholder="Search..." name="q" value="{{request("q")}}">
+        <input type="text" class="form-control rounded" placeholder="Search..." name="query" value="{{request("query")}}">
         <span class="input-group-text border-0" id="search-addon">
         <i class="ti ti-search"></i>
         </span>

@@ -12,6 +12,7 @@ class File extends Model
         'location',
         'summary',
         'title',
+        'short_desc',
     ];
 
 

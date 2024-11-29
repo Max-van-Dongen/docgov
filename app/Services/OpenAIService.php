@@ -31,6 +31,19 @@ class OpenAIService
 
         return $response->choices[0]->message->content;
     }
+    public function generateShortDescription($text)
+    {
+        $response = OpenAI::chat()->create([
+            'model' => 'gpt-4o-mini',
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are a helpful assistant that generates concise descriptions for documents in Dutch. The description should be 1-2 sentences long.'],
+                ['role' => 'user', 'content' => "Generate a short description for this content: {$text}"],
+            ],
+        ]);
+
+        return $response->choices[0]->message->content;
+    }
+
     public function extractPeople($text)
     {
         $response = OpenAI::chat()->create([

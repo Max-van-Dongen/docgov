@@ -9,6 +9,7 @@ use App\Services\PdfService;
 use App\Services\OpenAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use JBBCode\Parser;
 
 class FileController extends Controller
 {
@@ -24,69 +25,111 @@ class FileController extends Controller
     public function uploadAndProcess(Request $request)
     {
         $request->validate([
-            'pdf' => 'required|file|mimes:pdf|max:20480',
+            'pdf.*' => 'required|file|mimes:pdf|max:20480000000', // Allow multiple files
         ]);
 
         try {
-            $file = $request->file('pdf');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('uploads', $fileName, 'public');
+            $uploadedFiles = $request->file('pdf');
+            $processedFiles = [];
 
-            $text = $this->pdfService->extractText($file->getPathname());
-            $summary = $this->openAIService->summarizeText($text);
-            $title = $this->openAIService->generateTitle($text);
-            $peopleList = $this->openAIService->extractPeople($text);
-            $keywordsList = $this->openAIService->extractKeywords($text);
+            foreach ($uploadedFiles as $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('uploads', $fileName, 'public');
 
-            // Save File Record
-            $fileRecord = File::create([
-                'location' => $filePath,
-                'summary' => $summary,
-                'title' => $title,
-            ]);
+                $text = $this->pdfService->extractText($file->getPathname());
+                $summary = $this->openAIService->summarizeText($text);
+                $title = $this->openAIService->generateTitle($text);
+                $desc = $this->openAIService->generateShortDescription($text);
+                $peopleList = $this->openAIService->extractPeople($text);
+                $keywordsList = $this->openAIService->extractKeywords($text);
 
-            // Process People
-            foreach ($peopleList as $peopleText) {
-                // Split by line breaks and process each line
-                $names = preg_split('/\R/', trim($peopleText), -1, PREG_SPLIT_NO_EMPTY);
+                // Save File Record
+                $fileRecord = File::create([
+                    'location' => $filePath,
+                    'summary' => $summary,
+                    'title' => $title,
+                    'short_desc' => $desc,
+                ]);
 
-                foreach ($names as $name) {
-                    // Remove numbering like "1. ", "2. ", etc.
-                    $cleanedName = preg_replace('/^\d+\.\s*/', '', trim($name));
+                // Process People
+                foreach ($peopleList as $peopleText) {
+                    $names = preg_split('/\R/', trim($peopleText), -1, PREG_SPLIT_NO_EMPTY);
 
-                    // Only add if the name is not empty
-                    if (!empty($cleanedName)) {
-                        $person = Person::firstOrCreate(['name' => $cleanedName]);
-                        $fileRecord->people()->attach($person->id);
+                    foreach ($names as $name) {
+                        $cleanedName = preg_replace('/^\d+\.\s*/', '', trim($name));
+
+                        if (!empty($cleanedName)) {
+                            $person = Person::firstOrCreate(['name' => $cleanedName]);
+                            $fileRecord->people()->attach($person->id);
+                        }
                     }
                 }
-            }
 
-            // Process Keywords
-            foreach ($keywordsList as $keywordsText) {
-                // Split by line breaks and process each line
-                $keywords = preg_split('/\R/', trim($keywordsText), -1, PREG_SPLIT_NO_EMPTY);
+                // Process Keywords
+                foreach ($keywordsList as $keywordsText) {
+                    $keywords = preg_split('/\R/', trim($keywordsText), -1, PREG_SPLIT_NO_EMPTY);
 
-                foreach ($keywords as $keyword) {
-                    // Remove numbering like "1. ", "2. ", etc.
-                    $cleanedKeyword = preg_replace('/^\d+\.\s*/', '', trim($keyword));
+                    foreach ($keywords as $keyword) {
+                        $cleanedKeyword = preg_replace('/^\d+\.\s*/', '', trim($keyword));
 
-                    // Only add if the keyword is not empty
-                    if (!empty($cleanedKeyword)) {
-                        $keywordModel = Keyword::firstOrCreate(['word' => $cleanedKeyword]);
-                        $fileRecord->keywords()->attach($keywordModel->id);
+                        if (!empty($cleanedKeyword)) {
+                            $keywordModel = Keyword::firstOrCreate(['word' => $cleanedKeyword]);
+                            $fileRecord->keywords()->attach($keywordModel->id);
+                        }
                     }
                 }
+
+                $processedFiles[] = $fileRecord;
             }
 
             return response()->json([
-                'message' => 'File processed successfully!',
-                'data' => $fileRecord,
+                'message' => 'Files processed successfully!',
+                'data' => $processedFiles,
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+
+        // Perform the search
+        $files = File::with(['people', 'keywords'])
+            ->where('title', 'like', "%$query%")
+            ->orWhere('summary', 'like', "%$query%")
+            ->orWhere('desc', 'like', "%$query%")
+            ->orWhereHas('people', function ($q) use ($query) {
+                $q->where('name', 'like', "%$query%");
+            })
+            ->orWhereHas('keywords', function ($q) use ($query) {
+                $q->where('word', 'like', "%$query%");
+            })
+            ->get();
+
+        // Transform the results into an array
+        $results = $files->map(function ($file) {
+
+            $parser = new Parser();
+
+            // Add basic BBCodes (bold, italic, etc.)
+            $parser->addCodeDefinitionSet(new \JBBCode\DefaultCodeDefinitionSet());
+            return [
+                'id' => $file->id,
+                'title' => $file->title,
+                'summary' => $parser->parse($file->desc)->getAsHtml(),
+                'location' => $file->location,
+                'people' => $file->people->pluck('name'),
+                'keywords' => $file->keywords->pluck('word'),
+            ];
+        });
+
+        // Pass results to the view
+        return view('results', compact('results'));
+    }
+
 
 
 }
