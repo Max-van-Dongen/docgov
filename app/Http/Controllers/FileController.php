@@ -37,6 +37,9 @@ class FileController extends Controller
                 $filePath = $file->storeAs('uploads', $fileName, 'public');
 
                 $text = $this->pdfService->extractText($file->getPathname());
+
+                $text = $this->truncateTextToTokenLimit($text, 50000);
+
                 $summary = $this->openAIService->summarizeText($text);
                 $title = $this->openAIService->generateTitle($text);
                 $desc = $this->openAIService->generateShortDescription($text);
@@ -100,37 +103,46 @@ class FileController extends Controller
         $files = File::with(['people', 'keywords'])
             ->where('title', 'like', "%$query%")
             ->orWhere('summary', 'like', "%$query%")
-            ->orWhere('desc', 'like', "%$query%")
+            ->orWhere('short_desc', 'like', "%$query%")
             ->orWhereHas('people', function ($q) use ($query) {
                 $q->where('name', 'like', "%$query%");
             })
             ->orWhereHas('keywords', function ($q) use ($query) {
                 $q->where('word', 'like', "%$query%");
             })
+            ->orderBy('created_at', 'desc')
             ->get();
 
         // Transform the results into an array
         $results = $files->map(function ($file) {
-
-            $parser = new Parser();
-
-            // Add basic BBCodes (bold, italic, etc.)
-            $parser->addCodeDefinitionSet(new \JBBCode\DefaultCodeDefinitionSet());
             return [
                 'id' => $file->id,
                 'title' => $file->title,
-                'summary' => $parser->parse($file->desc)->getAsHtml(),
+                'short_desc' => $file->short_desc,
                 'location' => $file->location,
-                'people' => $file->people->pluck('name'),
-                'keywords' => $file->keywords->pluck('word'),
+                'people' => $file->people->pluck('name')->take(7),
+                'keywords' => $file->keywords->pluck('word')->take(7),
+                'created_at' => $file->created_at,
             ];
         });
 
         // Pass results to the view
         return view('results', compact('results'));
     }
+    protected function truncateTextToTokenLimit($text, $tokenLimit)
+    {
+        // Approximate tokens per character for English (1 token ≈ 4 characters)
+        $approxCharsPerToken = 4;
 
+        // Calculate the character limit
+        $charLimit = $tokenLimit * $approxCharsPerToken;
 
+        // Truncate the text to the character limit
+        if (strlen($text) > $charLimit) {
+            $text = substr($text, 0, $charLimit);
+        }
 
+        return $text;
+    }
 }
 

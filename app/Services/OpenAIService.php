@@ -49,7 +49,11 @@ class OpenAIService
         $response = OpenAI::chat()->create([
             'model' => 'gpt-4o-mini',
             'messages' => [
-                ['role' => 'system', 'content' => 'Extract the names of people mentioned in this text. Provide a list of names.'],
+                ['role' => 'system', 'content' => 'Extract the names of people mentioned in this text. Provide a list of names.
+                Give it in a list like:
+                1.
+                2.
+                3. '],
                 ['role' => 'user', 'content' => $text],
             ],
         ]);
@@ -62,7 +66,11 @@ class OpenAIService
         $response = OpenAI::chat()->create([
             'model' => 'gpt-4o-mini',
             'messages' => [
-                ['role' => 'system', 'content' => 'Extract the most relevant keywords from this text for search optimization. Provide a list of keywords.'],
+                ['role' => 'system', 'content' => 'Extract the most relevant keywords from this text for search optimization. Provide a list of keywords.
+                Give it in a list like:
+                1.
+                2.
+                3. '],
                 ['role' => 'user', 'content' => $text],
             ],
         ]);
