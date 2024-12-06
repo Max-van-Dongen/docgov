@@ -127,7 +127,9 @@ class FileController extends Controller
                 'location' => $file->location,
                 'people' => $file->people->pluck('name')->take(7),
                 'keywords' => $file->keywords->pluck('word')->take(7),
-                'created_at' => $file->created_at,
+                "type_document" => $file->type_document,
+                "type_category" => $file->type_category,
+                'created_at' => $file->original_date,
             ];
         });
 

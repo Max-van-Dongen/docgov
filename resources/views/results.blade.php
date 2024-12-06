@@ -7,12 +7,32 @@
         <!-- Filters (Left Column) -->
         <div class="col-md-3">
             <div class="ms-3">
-                <h6 class="mb-3">Filters</h6>
+                <h6 class="mb-3">Keywords</h6>
                 <div class="list-group">
-                    <button class="list-group-item list-group-item-action active" onclick="applyFilter('')">All Keywords</button>
+                    <button class="list-group-item list-group-item-action active" onclick="applyFilter('allKey')" id="allKey">All Keywords</button>
 
                     @foreach($results->pluck('keywords')->flatten()->unique()->take(10) as $keyword)
-                        <button class="list-group-item list-group-item-action" onclick="applyFilter('{{ $keyword }}')">
+                        <button class="list-group-item list-group-item-action" onclick="applyFilter('{{ $keyword }}')" id="{{ $keyword }}">
+                            {{ $keyword }}
+                        </button>
+                    @endforeach
+                </div>
+                <h6 class="mb-3">Type</h6>
+                <div class="list-group">
+                    <button class="list-group-item list-group-item-action active" onclick="applyTypeFilter('allType')" id="allType">All Types</button>
+
+                    @foreach($results->pluck('type_document')->flatten()->unique()->filter(function ($value) {return $value != "";})->take(10) as $keyword)
+                        <button class="list-group-item list-group-item-action" onclick="applyTypeFilter('{{ $keyword }}')" id="{{ $keyword }}">
+                            {{ $keyword }}
+                        </button>
+                    @endforeach
+                </div>
+                <h6 class="mb-3">Category</h6>
+                <div class="list-group">
+                    <button class="list-group-item list-group-item-action active" onclick="applyCategoryFilter('allCat')" id="allCat">All Categories</button>
+
+                    @foreach($results->pluck('type_category')->flatten()->unique()->filter(function ($value) {return $value != "";})->take(10) as $keyword)
+                        <button class="list-group-item list-group-item-action" onclick="applyCategoryFilter('{{ $keyword }}')" id="{{ $keyword }}">
                             {{ $keyword }}
                         </button>
                     @endforeach
@@ -31,11 +51,24 @@
                     <p class="text-muted">No results found for your search.</p>
                 @else
                     @foreach($results as $result)
-                        <a class="card mb-3" data-created-at="{{ \Carbon\Carbon::parse($result['created_at'])->format('Y-m-d') }}" href="/result/{{$result["id"]}}">
+                        <div class="card mb-3" data-created-at="{{ \Carbon\Carbon::parse($result['created_at'])->format('Y-m-d') }}" data-type-document="{{ $result['type_document'] }}" data-type-category="{{ $result['type_category'] }}">
                             <div class="card-body">
-                                <h6 class="card-title">{{ $result['title'] }}</h6>
-                                <p class="card-text text-muted">{{ $result['short_desc'] }}</p>
-                                <div class="card-footer text-muted">
+                                <h5 class="card-title mb-3">
+                                    <a class="text-primary text-decoration-none" href="/result/{{$result['id']}}">
+                                        {{ $result['title'] }}
+                                    </a>
+                                </h5>
+                                <p class="card-text text-secondary">
+                                    <a class="text-muted text-decoration-none" href="/result/{{$result['id']}}">
+                                        {{ $result['short_desc'] }}
+                                    </a>
+                                </p>
+                                <p class="card-text text-muted">
+                                    <span class="fw-semibold">{{ $result['type_document'] }}</span> |
+                                    <span>{{ $result['type_category'] }}</span> |
+                                    <span>{{ \Carbon\Carbon::parse($result['created_at'])->format('Y-m-d') }}</span>
+                                </p>
+                                <div class="mt-3">
                                     @foreach($result['keywords'] as $keyword)
                                         <span class="badge bg-primary">{{ $keyword }}</span>
                                     @endforeach
@@ -44,8 +77,7 @@
                                     @endforeach
                                 </div>
                             </div>
-                        </a>
-
+                        </div>
                     @endforeach
                 @endif
             </div>
@@ -72,36 +104,64 @@
 
     </div>
     <script>
-        let activeKeyword = ''; // Currently selected keyword
-        let activeYear = '';    // Currently selected year
+        let activeFilters = {
+            keyword: 'allKey',
+            type: 'allType',
+            category: 'allCat',
+            year: 'all',
+        };
 
+        // Function to apply the keyword filter
         function applyFilter(keyword) {
-            activeKeyword = keyword; // Update the active keyword
-            filterResults(); // Apply filtering
+            if (activeFilters.keyword) {
+                document.getElementById(activeFilters.keyword).classList.remove("active")
+            }
+            activeFilters.keyword = keyword;
+            document.getElementById(activeFilters.keyword).classList.add("active")
+            updateResults();
         }
 
-        function applyYearFilter(year) {
-            activeYear = year; // Update the active year
-            filterResults(); // Apply filtering
+        // Function to apply the type filter
+        function applyTypeFilter(type) {
+            if (activeFilters.type) {
+                document.getElementById(activeFilters.type).classList.remove("active")
+            }
+            activeFilters.type = type;
+            document.getElementById(activeFilters.type).classList.add("active")
+            updateResults();
         }
 
-        function filterResults() {
+        // Function to apply the category filter
+        function applyCategoryFilter(category) {
+            if (activeFilters.category) {
+                document.getElementById(activeFilters.category).classList.remove("active")
+            }
+            activeFilters.category = category;
+            document.getElementById(activeFilters.category).classList.add("active")
+            updateResults();
+        }
+
+        // Function to update results based on all active filters
+        function updateResults() {
             const cards = document.querySelectorAll('.card');
 
             cards.forEach(card => {
-                const keywords = Array.from(card.querySelectorAll('.badge.bg-primary')).map(badge => badge.textContent);
-                const createdAt = card.getAttribute('data-created-at'); // Get the creation year from the card
+                const matchesKeyword = activeFilters.keyword === 'allKey' || card.innerHTML.includes(activeFilters.keyword);
+                const matchesType = activeFilters.type === 'allType' || card.getAttribute('data-type-document') === activeFilters.type;
+                const matchesCategory = activeFilters.category === 'allCat' || card.getAttribute('data-type-category') === activeFilters.category;
+                const matchesYear = activeFilters.year === 'all' || card.getAttribute('data-year') === activeFilters.year;
 
-                const matchesKeyword = activeKeyword === '' || keywords.includes(activeKeyword);
-                const matchesYear = activeYear === '' || createdAt.startsWith(activeYear);
-
-                // Show card if it matches both filters, otherwise hide it
-                if (matchesKeyword && matchesYear) {
-                    card.style.display = 'block';
+                if (matchesKeyword && matchesType && matchesCategory && matchesYear) {
+                    card.style.display = '';
                 } else {
                     card.style.display = 'none';
                 }
             });
+        }
+
+        function applyYearFilter(year) {
+            activeFilters.year = year;
+            updateResults();
         }
     </script>
 
