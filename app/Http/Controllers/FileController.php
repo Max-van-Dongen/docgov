@@ -164,6 +164,9 @@ class FileController extends Controller
 
                 // Extract text from PDF
                 $text = $this->pdfService->extractText($tempPdfPath);
+                if ($text == "") {
+                    continue;
+                }
                 $text = $this->truncateTextToTokenLimit($text, 25000);
 
                 // Use AI service to process data
@@ -215,7 +218,7 @@ class FileController extends Controller
                 $processedFiles[] = $fileRecord;
 
                 // Clean up temp file
-                unlink($tempPdfPath);
+                @unlink($tempPdfPath);
             }
 
             return response()->json([

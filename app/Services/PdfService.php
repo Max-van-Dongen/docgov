@@ -12,9 +12,9 @@ class PdfService
         try {
             $text = Pdf::getText($filePath);
 
-            if (trim($text) === '') {
-                $text = (new TesseractOCR($filePath))->run();
-            }
+//            if (trim($text) === '') {
+//                $text = (new TesseractOCR($filePath))->run();
+//            }
 
             return $text;
         } catch (\Exception $e) {
