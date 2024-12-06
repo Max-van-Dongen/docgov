@@ -87,7 +87,7 @@
                     </button>
 
                     <!-- Download Button -->
-                    <a href="{{Storage::url($file->location)}}" class="btn btn-white mx-1" download>
+                    <a href="{{ $file->url }}" class="btn btn-white mx-1" download>
                         <i class="ti ti-download"></i> Download PDF
                     </a>
                 </div>

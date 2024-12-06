@@ -13,3 +13,8 @@ Route::view('/','search');
 Route::get('search', [FileController::class, 'search']);
 Route::view('result/{id}','result');
 Route::view('result/{id}/raw','result-raw');
+
+Route::get('/scrape-data', [FileController::class, 'processScrapedData']);
+
+Route::get('/load-pdf', [FileController::class, 'showPdf']);
+Route::view('/scrape','scrape-ui');

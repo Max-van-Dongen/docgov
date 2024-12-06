@@ -22,7 +22,7 @@
             <!-- Content Section -->
             <div class="col-md-8">
                 <div class="card shadow-sm p-4">
-                    <iframe src="{{Storage::url($file->location)}}" frameborder="0" height="700px"></iframe>
+                    <iframe src="{{ $file->url }}" frameborder="0" height="700px"></iframe>
                 </div>
             </div>
 
@@ -42,7 +42,7 @@
                     </button>
 
                     <!-- Download Button -->
-                    <a href="{{Storage::url($file->location)}}" class="btn btn-white mx-1" download>
+                    <a href="{{ $file->url }}" class="btn btn-white mx-1" download>
                         <i class="ti ti-download"></i> Download PDF
                     </a>
                 </div>
