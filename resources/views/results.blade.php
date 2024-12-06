@@ -17,7 +17,7 @@
                         </button>
                     @endforeach
                 </div>
-                <h6 class="mb-3">Type</h6>
+                <h6 class="mb-3">Types</h6>
                 <div class="list-group">
                     <button class="list-group-item list-group-item-action active" onclick="applyTypeFilter('allType')" id="allType">All Types</button>
 
@@ -27,7 +27,7 @@
                         </button>
                     @endforeach
                 </div>
-                <h6 class="mb-3">Category</h6>
+                <h6 class="mb-3">Categories</h6>
                 <div class="list-group">
                     <button class="list-group-item list-group-item-action active" onclick="applyCategoryFilter('allCat')" id="allCat">All Categories</button>
 

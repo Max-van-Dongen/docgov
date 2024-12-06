@@ -6,14 +6,61 @@
     <title>DocGov</title>
     <!-- MDB5 CSS -->
     <link
-        href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.1/mdb.min.css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.0.0/mdb.min.css"
         rel="stylesheet"
     />
     <!-- Tabler Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 </head>
-<body style="background-color: #F1F1F1">
+<body>
 <!-- Header -->
+<li class="nav-item align-items-center d-flex" style="position: absolute" >
+    <i class="ti ti-sun"></i>
+    <!-- Default switch -->
+    <div class="ms-2 form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="themingSwitcher" />
+    </div>
+    <i class="ti ti-moon"></i>
+</li>
+<script>
+    const themeStitcher = document.getElementById("themingSwitcher");
+    const isSystemThemeSetToDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    // Retrieve saved theme from localStorage
+    const savedTheme = localStorage.getItem("theme");
+
+    // Set theme based on saved preference or system theme
+    if (savedTheme) {
+        themeStitcher.checked = savedTheme === "dark";
+        document.documentElement.dataset.mdbTheme = savedTheme;
+    } else {
+        themeStitcher.checked = isSystemThemeSetToDark;
+        document.documentElement.dataset.mdbTheme = isSystemThemeSetToDark ? "dark" : "light";
+    }
+
+    // Add listener to theme toggler
+    themeStitcher.addEventListener("change", (e) => {
+        toggleTheme(e.target.checked);
+    });
+
+    const toggleTheme = (isChecked) => {
+        const theme = isChecked ? "dark" : "light";
+        document.documentElement.dataset.mdbTheme = theme;
+
+        // Save preference to localStorage
+        localStorage.setItem("theme", theme);
+    };
+
+    // Add listener to toggle theme with Shift + D
+    document.addEventListener("keydown", (e) => {
+        if (e.shiftKey && e.key === "D") {
+            themeStitcher.checked = !themeStitcher.checked;
+            toggleTheme(themeStitcher.checked);
+        }
+    });
+
+</script>
+
 <div class="container pb-3">
     <div class="d-flex align-items-center justify-content-between">
         <!-- Back Button -->
@@ -40,7 +87,7 @@
 <!-- MDB5 JS -->
 <script
     type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.1/mdb.min.js"
+    src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.0.0/mdb.min.js"
 ></script>
 </body>
 </html>
