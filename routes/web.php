@@ -11,7 +11,7 @@ Route::post('upload-pdf', [FileController::class, 'uploadAndProcess']);
 
 Route::view('/','search');
 Route::get('search', [FileController::class, 'search']);
-Route::view('result/{id}','result');
+Route::view('result/{id}','result-summary');
 Route::view('result/{id}/raw','result-raw');
 
 Route::get('/scrape-data', [FileController::class, 'processScrapedData']);
