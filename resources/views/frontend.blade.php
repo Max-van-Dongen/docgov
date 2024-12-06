@@ -78,6 +78,7 @@
             <i class="ti ti-home"></i> Home
         </a>
     </div>
+    @isset($search)
     <p class="text-muted">
         Explore official reports, policies, and legislative documents to understand government decisions and
         initiatives. Search by topic, region, or timeframe to see how public issues are addressed, track the impact of
@@ -94,6 +95,7 @@
             </div>
         </div>
     </form>
+    @endisset
 </div>
 
 <!-- Search Bar -->

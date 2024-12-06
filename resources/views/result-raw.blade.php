@@ -1,5 +1,5 @@
 @php use App\Models\File; @endphp
-@extends('frontend-result')
+@extends('frontend')
 @php
         $file = File::find($id);
         $tags = $file->keywords;
