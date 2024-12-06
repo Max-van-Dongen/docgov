@@ -60,7 +60,7 @@ class FileController extends Controller
 
                     foreach ($names as $name) {
                         $cleanedName = preg_replace('/^\d+\.\s*/', '', trim($name));
-
+                        $cleanedName = strtolower($cleanedName);
                         if (!empty($cleanedName)) {
                             $person = Person::firstOrCreate(['name' => $cleanedName]);
                             $fileRecord->people()->attach($person->id);
@@ -74,7 +74,7 @@ class FileController extends Controller
 
                     foreach ($keywords as $keyword) {
                         $cleanedKeyword = preg_replace('/^\d+\.\s*/', '', trim($keyword));
-
+                        $cleanedKeyword = strtolower($cleanedKeyword);
                         if (!empty($cleanedKeyword)) {
                             $keywordModel = Keyword::firstOrCreate(['word' => $cleanedKeyword]);
                             $fileRecord->keywords()->attach($keywordModel->id);

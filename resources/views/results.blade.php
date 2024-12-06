@@ -31,7 +31,7 @@
                     <p class="text-muted">No results found for your search.</p>
                 @else
                     @foreach($results as $result)
-                        <div class="card mb-3" data-created-at="{{ \Carbon\Carbon::parse($result['created_at'])->format('Y-m-d') }}">
+                        <a class="card mb-3" data-created-at="{{ \Carbon\Carbon::parse($result['created_at'])->format('Y-m-d') }}" href="/result/{{$result["id"]}}">
                             <div class="card-body">
                                 <h6 class="card-title">{{ $result['title'] }}</h6>
                                 <p class="card-text text-muted">{{ $result['short_desc'] }}</p>
@@ -44,7 +44,7 @@
                                     @endforeach
                                 </div>
                             </div>
-                        </div>
+                        </a>
 
                     @endforeach
                 @endif
