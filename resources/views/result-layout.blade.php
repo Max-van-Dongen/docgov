@@ -46,11 +46,11 @@
                 <!-- Toggle Buttons -->
                 <div class="d-flex justify-content-around mb-4">
                     <a href="/result/{{$file->id}}"
-                       class="btn {{ Request::is('result/'.$file->id) ? 'btn-primary text-white' : 'btn-light border' }}">
+                       class="btn {{ Request::is('result/'.$file->id) ? 'btn-primary text-white' : ' border' }}">
                         Summary
                     </a>
                     <a href="/result/{{$file->id}}/raw"
-                       class="btn {{ Request::is('result/'.$file->id.'/raw') ? 'btn-primary text-white' : 'btn-light border' }}">
+                       class="btn {{ Request::is('result/'.$file->id.'/raw') ? 'btn-primary text-white' : ' border' }}">
                         Raw Data
                     </a>
 

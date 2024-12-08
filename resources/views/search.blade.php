@@ -19,7 +19,7 @@
         <div class="row row-cols-1 row-cols-md-4 g-4">
             <!-- Topic 1 -->
             <div class="col">
-                <button class="btn btn-light w-100 py-4 border shadow-sm text-center"
+                <button class="btn w-100 py-4 border shadow-sm text-center"
                         onclick="window.location = '/search?query=Huis'">
                     <i class="ti ti-home-2 fs-1 mb-2 text-primary"></i>
                     <p class="mb-0">Housing & Properties</p>
@@ -27,7 +27,7 @@
             </div>
             <!-- Topic 2 -->
             <div class="col">
-                <button class="btn btn-light w-100 py-4 border shadow-sm text-center"
+                <button class="btn w-100 py-4 border shadow-sm text-center"
                         onclick="window.location = '/search?query=Gezondheid'">
                     <i class="ti ti-clipboard-heart fs-1 mb-2 text-primary"></i>
                     <p class="mb-0">Health & Social Services</p>
@@ -35,7 +35,7 @@
             </div>
             <!-- Topic 3 -->
             <div class="col">
-                <button class="btn btn-light w-100 py-4 border shadow-sm text-center"
+                <button class="btn w-100 py-4 border shadow-sm text-center"
                         onclick="window.location = '/search?query=Baan'">
                     <i class="ti ti-briefcase fs-1 mb-2 text-primary"></i>
                     <p class="mb-0">Jobs & Employment</p>
@@ -43,7 +43,7 @@
             </div>
             <!-- Topic 4 -->
             <div class="col">
-                <button class="btn btn-light w-100 py-4 border shadow-sm text-center"
+                <button class="btn w-100 py-4 border shadow-sm text-center"
                         onclick="window.location = '/search?query=Energie'">
                     <i class="ti ti-bolt fs-1 mb-2 text-primary"></i>
                     <p class="mb-0">Environment & Energy</p>

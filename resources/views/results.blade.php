@@ -7,16 +7,6 @@
         <!-- Filters (Left Column) -->
         <div class="col-md-3">
             <div class="ms-3">
-                <h6 class="mb-3">Keywords</h6>
-                <div class="list-group">
-                    <button class="list-group-item list-group-item-action active" onclick="applyFilter('allKey')" id="allKey">All Keywords</button>
-
-                    @foreach($results->pluck('keywords')->flatten()->unique()->take(10) as $keyword)
-                        <button class="list-group-item list-group-item-action" onclick="applyFilter('{{ $keyword }}')" id="{{ $keyword }}">
-                            {{ $keyword }}
-                        </button>
-                    @endforeach
-                </div>
                 <h6 class="mb-3">Types</h6>
                 <div class="list-group">
                     <button class="list-group-item list-group-item-action active" onclick="applyTypeFilter('allType')" id="allType">All Types</button>
@@ -27,12 +17,22 @@
                         </button>
                     @endforeach
                 </div>
-                <h6 class="mb-3">Categories</h6>
+                <h6 class="my-3">Categories</h6>
                 <div class="list-group">
                     <button class="list-group-item list-group-item-action active" onclick="applyCategoryFilter('allCat')" id="allCat">All Categories</button>
 
                     @foreach($results->pluck('type_category')->flatten()->unique()->filter(function ($value) {return $value != "";})->take(10) as $keyword)
                         <button class="list-group-item list-group-item-action" onclick="applyCategoryFilter('{{ $keyword }}')" id="{{ $keyword }}">
+                            {{ $keyword }}
+                        </button>
+                    @endforeach
+                </div>
+                <h6 class="my-3">Keywords</h6>
+                <div class="list-group">
+                    <button class="list-group-item list-group-item-action active" onclick="applyFilter('allKey')" id="allKey">All Keywords</button>
+
+                    @foreach($results->pluck('keywords')->flatten()->unique()->take(10) as $keyword)
+                        <button class="list-group-item list-group-item-action" onclick="applyFilter('{{ $keyword }}')" id="{{ $keyword }}">
                             {{ $keyword }}
                         </button>
                     @endforeach
@@ -51,7 +51,7 @@
                     <p class="text-muted">No results found for your search.</p>
                 @else
                     @foreach($results as $result)
-                        <div class="card mb-3" data-created-at="{{ \Carbon\Carbon::parse($result['created_at'])->format('Y-m-d') }}" data-type-document="{{ $result['type_document'] }}" data-type-category="{{ $result['type_category'] }}">
+                        <div class="card mb-3" data-year="{{ \Carbon\Carbon::parse($result['created_at'])->format('Y') }}" data-type-document="{{ $result['type_document'] }}" data-type-category="{{ $result['type_category'] }}">
                             <div class="card-body">
                                 <h5 class="card-title mb-3">
                                     <a class="text-primary text-decoration-none" href="/result/{{$result['id']}}">
@@ -88,12 +88,12 @@
             <div class="me-3">
                 <h6 class="mb-3">Timeline</h6>
                 <div class="d-flex flex-column">
-                    <button class="btn btn-outline-primary mb-2 active" onclick="applyYearFilter('')">All Years</button>
+                    <button class="btn btn-primary mb-2 active" onclick="applyYearFilter('allYear')" id="allYear">All Years</button>
 
                     @foreach($results->pluck('created_at')->map(function($date) {
                         return \Carbon\Carbon::parse($date)->year;
                     })->unique()->sortDesc() as $year)
-                        <button class="btn btn-outline-primary mb-2" onclick="applyYearFilter('{{ $year }}')">
+                        <button class="btn btn-outline-primary mb-2" onclick="applyYearFilter('{{ $year }}')" id="{{ $year }}">
                             {{ $year }}
                         </button>
                     @endforeach
@@ -108,7 +108,7 @@
             keyword: 'allKey',
             type: 'allType',
             category: 'allCat',
-            year: 'all',
+            year: 'allYear',
         };
 
         // Function to apply the keyword filter
@@ -149,7 +149,7 @@
                 const matchesKeyword = activeFilters.keyword === 'allKey' || card.innerHTML.includes(activeFilters.keyword);
                 const matchesType = activeFilters.type === 'allType' || card.getAttribute('data-type-document') === activeFilters.type;
                 const matchesCategory = activeFilters.category === 'allCat' || card.getAttribute('data-type-category') === activeFilters.category;
-                const matchesYear = activeFilters.year === 'all' || card.getAttribute('data-year') === activeFilters.year;
+                const matchesYear = activeFilters.year === 'allYear' || card.getAttribute('data-year') === activeFilters.year;
 
                 if (matchesKeyword && matchesType && matchesCategory && matchesYear) {
                     card.style.display = '';
@@ -160,7 +160,13 @@
         }
 
         function applyYearFilter(year) {
+            if (activeFilters.year) {
+                document.getElementById(activeFilters.year).classList.remove("btn-primary")
+                document.getElementById(activeFilters.year).classList.add("btn-outline-primary")
+            }
             activeFilters.year = year;
+            document.getElementById(activeFilters.year).classList.add("btn-primary")
+            document.getElementById(activeFilters.year).classList.remove("btn-outline-primary")
             updateResults();
         }
     </script>

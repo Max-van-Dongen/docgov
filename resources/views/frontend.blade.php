@@ -73,18 +73,18 @@
 <div class="container pb-3">
     <div class="d-flex align-items-center justify-content-between">
         <!-- Back Button -->
-        <a href="javascript:history.back()" class="btn btn-link text-dark">
+        <a href="javascript:history.back()" class="btn btn-link">
             <i class="ti ti-arrow-left"></i> Back
         </a>
 
         <!-- Logo and Title -->
         <div class="text-center">
             <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Logo_rijksoverheid.svg" alt="Logo" width="50" class="mb-1">
-            <h1 class="4 mb-0"><a href="/" style="color: #18181b">DocGov</a></h1>
+            <h1 class="4 mb-0">DocGov</h1>
         </div>
 
         <!-- Home Button -->
-        <a href="/" class="btn btn-link text-dark">
+        <a href="/" class="btn btn-link">
             <i class="ti ti-home"></i> Home
         </a>
     </div>
