@@ -262,7 +262,7 @@ class FileController extends Controller
 
         try {
             // Fetch PDF content
-            $response = Http::get($url);
+            $response = Http::withoutVerifying()->get($url);
 
             // Check if the response is successful
             if ($response->failed()) {
