@@ -48,7 +48,7 @@ class RelevancyController extends Controller
                 DB::table('file_relevancy')->updateOrInsert(
                     ['relevant_file_id' => $relevant_file_id->id, 'relevant_to_file_id' => $relevant_to_file_id->id],
                     [
-                        'relevancy' => max(round($relevancyScore, 2),100), // Round to 2 decimal places and clamp it to 100
+                        'relevancy' => min(round($relevancyScore, 2),100), // Round to 2 decimal places and clamp it to 100
                         'matched_words' => json_encode($commonWords),
                     ]
                 );
