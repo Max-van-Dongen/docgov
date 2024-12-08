@@ -34,5 +34,35 @@ class File extends Model
         return str_contains($this->location,"https")!==false ? "/load-pdf?url=".$this->location : Storage::url($this->location);
     }
 
+
+    /**
+     * Get all relevancy records where this file is the primary file.
+     */
+    public function relevancies(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(FileRelevancy::class, 'relevant_file_id');
+    }
+
+    /**
+     * Get all relevancy records where this file is the related file.
+     */
+    public function relatedRelevancies(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(FileRelevancy::class, 'relevant_to_file_id');
+    }
+
+    /**
+     * Get all files related to this file through relevancy.
+     */
+    public function relatedFiles(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            File::class,
+            'file_relevancy',
+            'relevant_file_id',
+            'relevant_to_file_id'
+        )->withPivot('relevancy', 'matched_words');
+    }
+
 }
 

@@ -61,5 +61,4 @@
                     <button class="btn btn-outline-primary mt-3">What does this mean for me?</button>
                 </div>
             </div>
-
 @endsection

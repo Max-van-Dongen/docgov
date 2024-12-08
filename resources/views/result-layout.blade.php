@@ -3,11 +3,15 @@
 @php
         $file = File::find($id);
         $tags = $file->keywords;
-        $related_files = File::whereHas('keywords', function ($query) use ($tags) {
-        $query->whereIn('keywords.id', $tags->pluck('id'));
-    })->where('files.id', '!=', $file->id) // Exclude the current file
-    ->distinct() // Ensure no duplicate files
-    ->get();
+        $people = $file->people;
+//        $related_files = File::whereHas('keywords', function ($query) use ($tags) {
+//        $query->whereIn('keywords.id', $tags->pluck('id'));
+//    })->where('files.id', '!=', $file->id) // Exclude the current file
+//    ->distinct() // Ensure no duplicate files
+//    ->get();
+        $related_files = $file->relatedFiles;
+//        dd($related_files);
+
 @endphp
 @section("title")
 {{$file->title}}
@@ -60,16 +64,35 @@
                     <ul class="list">
                         @if(count($related_files) > 10)
                             @foreach($related_files as $index => $r_file)
+                                @php
+                                    $matchedWords = json_decode($r_file->pivot->matched_words, true) ?? [];
+                                    $highlightedTitle = app(\App\Models\FileRelevancy::class)
+                                        ->highlightMatchedWords($r_file->title, $matchedWords);
+                                @endphp
+
                                 @if($index < 10)
-                                    <li><a href="/result/{{$r_file->id}}" class="text-decoration-none">{{$r_file->title}}</a></li>
+                                <li>
+                                    <a href="/result/{{$r_file->id}}" class="text-decoration-none">
+                                        {!! $highlightedTitle !!}
+                                    </a>
+                                </li>
                                 @endif
                             @endforeach
 
                             <div class="collapse" id="moreArticles">
                                 <div>
-                                    @foreach($related_files as $index => $r_file)
-                                        @if($index >= 10)
-                                            <li><a href="/result/{{$r_file->id}}" class="text-decoration-none">{{$r_file->title}}</a></li>
+                                    @foreach($related_files as $index2 => $r_file)
+                                        @php
+                                            $matchedWords = json_decode($r_file->pivot->matched_words, true) ?? [];
+                                            $highlightedTitle = app(\App\Models\FileRelevancy::class)
+                                                ->highlightMatchedWords($r_file->title, $matchedWords);
+                                        @endphp
+                                        @if($index2 >= 10)
+                                            <li>
+                                                <a href="/result/{{$r_file->id}}" class="text-decoration-none">
+                                                    {!! $highlightedTitle !!}
+                                                </a>
+                                            </li>
                                         @endif
                                     @endforeach
                                 </div>
@@ -81,8 +104,18 @@
                                 </button>
                             </p>
                         @else
-                            @forelse($related_files as $r_file)
-                                <li><a href="/result/{{$r_file->id}}" class="text-decoration-none">{{$r_file->title}}</a></li>
+                            @forelse($related_files as $index => $r_file)
+                                @php
+                                    $matchedWords = json_decode($r_file->pivot->matched_words, true) ?? [];
+                                    $highlightedTitle = app(\App\Models\FileRelevancy::class)
+                                        ->highlightMatchedWords($r_file->title, $matchedWords);
+                                @endphp
+
+                                    <li>
+                                        <a href="/result/{{$r_file->id}}" class="text-decoration-none">
+                                            {!! $highlightedTitle !!}
+                                        </a>
+                                    </li>
                             @empty
                                 No Related Articles
                             @endforelse
@@ -92,13 +125,23 @@
 
 
                 <!-- Related Tags -->
-                <div class="shadow-sm p-4 card">
+                <div class="shadow-sm p-4 mb-4 card">
                     <h6>Related Tags:</h6>
                     <div class="text-center">
                         @forelse($tags as $tag)
                             <span class="badge rounded-pill badge-primary">{{$tag->word}}</span>
                         @empty
                             No Related Tags
+                        @endforelse</div>
+                </div>
+                <!-- Related People -->
+                <div class="shadow-sm p-4 mb-4 card">
+                    <h6>Related People:</h6>
+                    <div class="text-center">
+                        @forelse($people as $person)
+                            <span class="badge rounded-pill badge-primary">{{$person->name}}</span>
+                        @empty
+                            No Mentioned People
                         @endforelse</div>
                 </div>
             </div>
