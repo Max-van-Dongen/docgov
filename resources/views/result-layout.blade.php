@@ -129,7 +129,7 @@
                     <h6>Related Tags:</h6>
                     <div class="text-center">
                         @forelse($tags as $tag)
-                            <span class="badge rounded-pill badge-primary">{{$tag->word}}</span>
+                            <span class="badge rounded-pill badge-primary"><a href="/search?query={{$tag->word}}">{{$tag->word}}</a></span>
                         @empty
                             No Related Tags
                         @endforelse</div>
@@ -139,7 +139,7 @@
                     <h6>Related People:</h6>
                     <div class="text-center">
                         @forelse($people as $person)
-                            <span class="badge rounded-pill badge-primary">{{$person->name}}</span>
+                            <span class="badge rounded-pill badge-primary"><a href="/search?query={{$person->name}}">{{$person->name}}</a></span>
                         @empty
                             No Mentioned People
                         @endforelse</div>
