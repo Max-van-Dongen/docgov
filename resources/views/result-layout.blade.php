@@ -57,14 +57,39 @@
                 </div>
                 <div class="card shadow-sm p-4 mb-4">
                     <h6>Related Articles:</h6>
-                    <ul class="list-unstyled">
-                        @forelse($related_files as $r_file)
-                            <li><a href="/result/{{$r_file->id}}" class="text-decoration-none">{{$r_file->title}}</a></li>
-                        @empty
-                            No Related Articles
-                        @endforelse
+                    <ul class="list">
+                        @if(count($related_files) > 10)
+                            @foreach($related_files as $index => $r_file)
+                                @if($index < 10)
+                                    <li><a href="/result/{{$r_file->id}}" class="text-decoration-none">{{$r_file->title}}</a></li>
+                                @endif
+                            @endforeach
+
+                            <div class="collapse" id="moreArticles">
+                                <div>
+                                    @foreach($related_files as $index => $r_file)
+                                        @if($index >= 10)
+                                            <li><a href="/result/{{$r_file->id}}" class="text-decoration-none">{{$r_file->title}}</a></li>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <p>
+                                <button class="btn btn-primary mt-2" type="button" data-mdb-collapse-init data-mdb-target="#moreArticles" aria-expanded="false" aria-controls="moreArticles">
+                                    More
+                                </button>
+                            </p>
+                        @else
+                            @forelse($related_files as $r_file)
+                                <li><a href="/result/{{$r_file->id}}" class="text-decoration-none">{{$r_file->title}}</a></li>
+                            @empty
+                                No Related Articles
+                            @endforelse
+                        @endif
                     </ul>
                 </div>
+
 
                 <!-- Related Tags -->
                 <div class="shadow-sm p-4 card">
