@@ -61,9 +61,19 @@ class RelevancyController extends Controller
 
     private function extractWords($title)
     {
+        // List of common words (stop words) to ignore
+        $stopWords = [
+            'en', 'aan', 'van', 'het', 'de', 'een', 'op', 'in', 'met', 'door', 'voor',
+            'uit', 'over', 'onder', 'naar', 'bij', 'te', 'of', 'maar', 'om', 'tot', 'als'
+        ];
+
         // Convert title to lowercase, remove special characters, and split into words
-        return array_filter(
+        $words = array_filter(
             preg_split('/\s+/', strtolower(preg_replace('/[^a-zA-Z0-9\s]/', '', $title)))
         );
+
+        // Filter out stop words
+        return array_diff($words, $stopWords);
     }
+
 }
