@@ -73,7 +73,7 @@
                                 @if($index < 10)
                                 <li>
                                     <a href="/result/{{$r_file->id}}" class="text-decoration-none">
-                                        {!! $highlightedTitle !!}
+                                        {!! $highlightedTitle !!} <span class="">| {{\Carbon\Carbon::parse($r_file['created_at'])->format('Y')}}</span>
                                     </a>
                                 </li>
                                 @endif
@@ -90,7 +90,7 @@
                                         @if($index2 >= 10)
                                             <li>
                                                 <a href="/result/{{$r_file->id}}" class="text-decoration-none">
-                                                    {!! $highlightedTitle !!}
+                                                    {!! $highlightedTitle !!} <span class="">| {{\Carbon\Carbon::parse($r_file['created_at'])->format('Y')}}</span>
                                                 </a>
                                             </li>
                                         @endif
@@ -113,7 +113,7 @@
 
                                     <li>
                                         <a href="/result/{{$r_file->id}}" class="text-decoration-none">
-                                            {!! $highlightedTitle !!}
+                                            {!! $highlightedTitle !!} <span class="">| {{\Carbon\Carbon::parse($r_file['created_at'])->format('Y')}}</span>
                                         </a>
                                     </li>
                             @empty
