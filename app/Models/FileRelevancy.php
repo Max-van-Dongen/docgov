@@ -13,6 +13,7 @@ class FileRelevancy extends Model
         'file_id',
         'file2_id',
         'relevancy',
+        'date_difference_days',
     ];
 
     /**

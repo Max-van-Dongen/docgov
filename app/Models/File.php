@@ -61,8 +61,12 @@ class File extends Model
             'file_relevancy',
             'relevant_file_id',
             'relevant_to_file_id'
-        )->withPivot('relevancy', 'matched_words');
+        )
+            ->withPivot('relevancy', 'matched_words', 'date_difference_days')
+            ->orderBy('date_difference_days', 'asc') // Sort by date_difference_days in ascending order
+            ->orderBy('relevancy', 'desc'); // Then sort by relevancy in descending order
     }
+
 
 }
 

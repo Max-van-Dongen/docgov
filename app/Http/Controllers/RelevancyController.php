@@ -29,7 +29,7 @@ class RelevancyController extends Controller
                 $titleWords1 = $fileWordMap[$relevant_file_id->id];
                 $titleWords2 = $fileWordMap[$relevant_to_file_id->id];
 
-                // Calculate the relevancy score based on common words
+                // Calculate the title relevancy score
                 $commonWords = array_intersect($titleWords1, $titleWords2);
                 $totalWords = count(array_unique(array_merge($titleWords1, $titleWords2)));
 
@@ -37,10 +37,20 @@ class RelevancyController extends Controller
                     continue;
                 }
 
-                // Relevancy score as a percentage
-                $relevancyScore = (count($commonWords) / $totalWords) * 100;
+                $titleRelevancyScore = (count($commonWords) / $totalWords) * 100;
 
-                if ($relevancyScore < 20) { // Skip low-relevancy pairs, e.g., less than 20%
+                // Calculate the date relevancy score
+                $date1 = strtotime($relevant_file_id->original_date);
+                $date2 = strtotime($relevant_to_file_id->original_date);
+                $dateDifference = abs($date1 - $date2) / (60 * 60 * 24); // Difference in days
+
+                // Use an exponential decay for date proximity
+                $dateRelevancyScore = exp(-$dateDifference / 30) * 100; // Decay factor of 30 days
+
+                // Combine title and date relevancy scores
+                $combinedRelevancyScore = 0.7 * $titleRelevancyScore + 0.3 * $dateRelevancyScore; // Weighted combination
+
+                if ($combinedRelevancyScore < 10) { // Skip low-relevancy pairs
                     continue;
                 }
 
@@ -48,8 +58,9 @@ class RelevancyController extends Controller
                 DB::table('file_relevancy')->updateOrInsert(
                     ['relevant_file_id' => $relevant_file_id->id, 'relevant_to_file_id' => $relevant_to_file_id->id],
                     [
-                        'relevancy' => min(round($relevancyScore, 2),100), // Round to 2 decimal places and clamp it to 100
+                        'relevancy' => min(round($combinedRelevancyScore, 2), 100), // Clamp score to 100
                         'matched_words' => json_encode($commonWords),
+                        'date_difference_days' => $dateDifference,
                     ]
                 );
             }
@@ -59,12 +70,14 @@ class RelevancyController extends Controller
     }
 
 
+
     private function extractWords($title)
     {
         // List of common words (stop words) to ignore
         $stopWords = [
             'en', 'aan', 'van', 'het', 'de', 'een', 'op', 'in', 'met', 'door', 'voor',
-            'uit', 'over', 'onder', 'naar', 'bij', 'te', 'of', 'maar', 'om', 'tot', 'als'
+            'uit', 'over', 'onder', 'naar', 'bij', 'te', 'of', 'maar', 'om', 'tot', 'als',
+//            "Vragen", "Kamervragen"
         ];
 
         // Convert title to lowercase, remove special characters, and split into words
