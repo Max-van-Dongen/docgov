@@ -20,7 +20,7 @@
 
     <div class="container my-4">
 
-        <h4 class="mt-3">{{$file->title}}</h4>
+        <h4 class="mt-3">{{$file->title}} <span class="text-muted">| {{ \Carbon\Carbon::parse($file['original_date'])->format('d-m-Y')  }}</span> </h4>
         <!-- Main Content -->
         <div class="row">
             <!-- Content Section -->
