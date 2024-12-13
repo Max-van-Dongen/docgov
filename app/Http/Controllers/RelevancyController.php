@@ -80,12 +80,12 @@ class RelevancyController extends Controller
         $stopWords = [
             'en', 'aan', 'van', 'het', 'de', 'een', 'op', 'in', 'met', 'door', 'voor',
             'uit', 'over', 'onder', 'naar', 'bij', 'te', 'of', 'maar', 'om', 'tot', 'als',
-//            "Vragen", "Kamervragen"
+            "vragen", "kamervragen"
         ];
 
         // Convert title to lowercase, remove special characters, and split into words
         $words = array_filter(
-            preg_split('/\s+/', strtolower(preg_replace('/[^a-zA-Z0-9\s]/', '', $title)))
+            preg_split('/\s+/', strtolower(preg_replace('/[^a-zA-Z0-9\s]/', '', str_replace("-","",$title))))
         );
 
         // Filter out stop words
