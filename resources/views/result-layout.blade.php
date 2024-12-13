@@ -38,7 +38,7 @@
 
                     <!-- Save Button -->
                     <button class="btn btn-white mx-1" onclick="window.print()">
-                        <i class="ti ti-device-floppy"></i> Save
+                        <i class="ti ti-device-floppy"></i> Save Page
                     </button>
 
                     <!-- Download Button -->
@@ -138,7 +138,7 @@
                     <h6>Related Tags:</h6>
                     <div class="text-center">
                         @forelse($tags as $tag)
-                            <span class="badge rounded-pill badge-primary"><a href="/search?query={{$tag->word}}">{{$tag->word}}</a></span>
+                            <span class="badge rounded-pill badge-primary"><a href="/search?query={{$tag->word}}">{{ ucwords($tag->word) }}</a></span>
                         @empty
                             No Related Tags
                         @endforelse</div>
@@ -148,7 +148,7 @@
                     <h6>Related People:</h6>
                     <div class="text-center">
                         @forelse($people as $person)
-                            <span class="badge rounded-pill badge-primary"><a href="/search?query={{$person->name}}">{{$person->name}}</a></span>
+                            <span class="badge rounded-pill badge-primary"><a href="/search?query={{$person->name}}">{{ ucwords($person->name) }}</a></span>
                         @empty
                             No Mentioned People
                         @endforelse</div>

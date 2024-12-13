@@ -70,10 +70,10 @@
                                 </p>
                                 <div class="mt-3">
                                     @foreach($result['keywords'] as $keyword)
-                                        <span class="badge bg-primary">{{ $keyword }}</span>
+                                        <span class="badge bg-primary">{{ ucwords($keyword) }}</span>
                                     @endforeach
                                     @foreach($result['people'] as $person)
-                                        <span class="badge bg-secondary">{{ $person }}</span>
+                                        <span class="badge bg-secondary">{{ ucwords($person) }}</span>
                                     @endforeach
                                 </div>
                             </div>
