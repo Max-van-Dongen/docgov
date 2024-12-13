@@ -80,7 +80,7 @@ class RelevancyController extends Controller
         $stopWords = [
             'en', 'aan', 'van', 'het', 'de', 'een', 'op', 'in', 'met', 'door', 'voor',
             'uit', 'over', 'onder', 'naar', 'bij', 'te', 'of', 'maar', 'om', 'tot', 'als',
-            "vragen", "kamervragen"
+            "vragen", "kamervragen", "tweede","kamer", "antwoorden", "antwoord"
         ];
 
         // Convert title to lowercase, remove special characters, and split into words
