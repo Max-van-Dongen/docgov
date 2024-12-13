@@ -39,6 +39,9 @@ class RelevancyController extends Controller
 
                 $titleRelevancyScore = (count($commonWords) / $totalWords) * 100;
 
+                if ($titleRelevancyScore < 5) {//skip date matching when title has no match
+                    continue;
+                }
                 // Calculate the date relevancy score
                 $date1 = strtotime($relevant_file_id->original_date);
                 $date2 = strtotime($relevant_to_file_id->original_date);
