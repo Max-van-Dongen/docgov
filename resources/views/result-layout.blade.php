@@ -59,6 +59,15 @@
                     </a>
 
                 </div>
+
+
+                <div class="card shadow-sm p-4 mb-4">
+                    <h5>Document Info:</h5>
+                    <p class="card-text"><b>Document:</b> {{ $file->type_document  }}</p>
+                    <p class="card-text"><b>Category:</b> {{$file->type_category}}</p>
+                    <p class="card-text"><b>Published:</b> {{\Carbon\Carbon::parse($file->original_date)->format('d-m-Y')}}</p>
+                </div>
+
                 <div class="card shadow-sm p-4 mb-4">
                     <h6>Related Articles:</h6>
                     <ul class="list">
