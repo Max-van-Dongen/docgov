@@ -1,5 +1,6 @@
 <input type="text" id="scrape-text">
 <button id="scrape-submit">Scrape!</button>
+<button id="calc-relevancy">Calculate Relevancy</button>
 
 <script>
     document.getElementById('scrape-submit').addEventListener('click', () => {
@@ -24,4 +25,24 @@
             });
     });
 
+    document.getElementById('calc-relevancy').addEventListener('click', () => {
+
+        const url = `/calculate-relevancy`;
+
+        fetch(url, {
+            method: 'GET',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
 </script>
