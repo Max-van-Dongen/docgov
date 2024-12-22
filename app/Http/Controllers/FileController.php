@@ -47,7 +47,7 @@ class FileController extends Controller
                 $desc = $this->openAIService->generateShortDescription($text);
                 $peopleList = $this->openAIService->extractPeople($text);
                 $keywordsList = $this->openAIService->extractKeywords($text);
-
+                dd(array_merge($peopleList, $keywordsList,$desc,$summary,$title));
                 // Save File Record
                 $fileRecord = File::create([
                     'location' => $filePath,
