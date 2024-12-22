@@ -8,6 +8,7 @@ use App\Models\Person;
 use App\Services\PdfService;
 use App\Services\OpenAIService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\JsonResponse;
@@ -207,9 +208,9 @@ class FileController extends Controller
     }
 
 
-    public function regenerateLLMData()
+    public function regeneratePdfData()
     {
-        $files = File::whereNotNull('full_text')->where('full_text', '!=', '')->get();
+        $files = File::whereNotNull('full_text')->where('full_text', '!=', '')->orderBy('updated_at','asc')->get();
 
         foreach ($files as $file) {
             try {
@@ -236,8 +237,66 @@ class FileController extends Controller
                 Log::error('Error processing File ID ' . $file->id, ['message' => $e->getMessage()]);
             }
         }
+    }
+
+    public function regenerateMetaData()
+    {
+        // Truncate related tables
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Person::truncate();
+        Keyword::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        $files = File::whereNotNull('full_text')->where('full_text', '!=', '')->get();
+
+        foreach ($files as $file) {
+            try {
+                $text = $file->full_text;
+
+                if (!$text) {
+                    Log::warning('File with ID ' . $file->id . ' has no full_text.');
+                    continue;
+                }
+
+                $peopleList = $this->openAIService->extractPeople($text);
+                $keywordsList = $this->openAIService->extractKeywords($text);
+
+                foreach ($peopleList as $peopleText) {
+                    $names = preg_split('/\R/', trim($peopleText), -1, PREG_SPLIT_NO_EMPTY);
+
+                    foreach ($names as $name) {
+                        $cleanedName = preg_replace('/^\d+\.\s*/', '', trim($name));
+                        $cleanedName = strtolower($cleanedName);
+
+                        if (!empty($cleanedName) && strlen($cleanedName) <= 20) {
+                            $person = Person::firstOrCreate(['name' => $cleanedName]);
+                            $file->people()->attach($person->id);
+                        }
+                    }
+                }
+
+                foreach ($keywordsList as $keywordsText) {
+                    $keywords = preg_split('/\R/', trim($keywordsText), -1, PREG_SPLIT_NO_EMPTY);
+
+                    foreach ($keywords as $keyword) {
+                        $cleanedKeyword = preg_replace('/^\d+\.\s*/', '', trim($keyword));
+                        $cleanedKeyword = strtolower($cleanedKeyword);
+
+                        if (!empty($cleanedKeyword) && strlen($cleanedKeyword) <= 20) {
+                            $keywordModel = Keyword::firstOrCreate(['word' => $cleanedKeyword]);
+                            $file->keywords()->attach($keywordModel->id);
+                        }
+                    }
+                }
+
+
+            } catch (\Exception $e) {
+                Log::error('Error processing File ID ' . $file->id, ['message' => $e->getMessage()]);
+            }
+        }
 
     }
+
 
 }
 
