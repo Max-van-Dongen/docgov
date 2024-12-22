@@ -205,5 +205,39 @@ class FileController extends Controller
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
+
+
+    public function regenerateLLMData()
+    {
+        $files = File::whereNotNull('full_text')->where('full_text', '!=', '')->get();
+
+        foreach ($files as $file) {
+            try {
+                $text = $file->full_text;
+
+                if (!$text) {
+                    Log::warning('File with ID ' . $file->id . ' has no full_text.');
+                    continue;
+                }
+
+                // Generate metadata using OpenAI service
+                $summary = $this->openAIService->summarizeText($text);
+                $title = $this->openAIService->generateTitle($text);
+                $desc = $this->openAIService->generateShortDescription($text);
+
+                // Save updates back to the database
+                $file->summary = $summary;
+                $file->title = $title;
+                $file->short_desc = $desc;
+                $file->save();
+
+
+            } catch (\Exception $e) {
+                Log::error('Error processing File ID ' . $file->id, ['message' => $e->getMessage()]);
+            }
+        }
+
+    }
+
 }
 

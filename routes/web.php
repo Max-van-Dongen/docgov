@@ -24,3 +24,4 @@ Route::get('/calculate-relevancy', [RelevancyController::class, 'calculateReleva
 // "API" related endpoints
 Route::get('/load-pdf', [FileController::class, 'showPdf']);
 Route::get('/scrape-data', [FileController::class, 'processScrapedData']);
+Route::get('/clean-data', [FileController::class, 'regenerateLLMData']);
