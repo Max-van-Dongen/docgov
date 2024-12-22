@@ -61,6 +61,19 @@ class OpenAIService
         return array_map('trim', explode(',', $response->choices[0]->message->content));
     }
 
+    public function generatePersonalisedText($text)
+    {
+        $response = OpenAI::chat()->create([
+            'model' => 'gpt-4o-mini',
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are a helpful assistant that generates concise and personalized descriptions for documents in Dutch. Tailor the description for a man aged 20-30 from The Hague. Focus on what might interest him, making it relatable and engaging, and limit the response to 2-4 sentences.'],
+                ['role' => 'user', 'content' => "Generate a personalized description for this content: {$text}"],
+            ],
+        ]);
+
+        return $response->choices[0]->message->content;
+    }
+
     public function extractKeywords($text)
     {
         $response = OpenAI::chat()->create([
