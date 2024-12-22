@@ -6,8 +6,6 @@ use App\Http\Controllers\ScrapeController;
 use Illuminate\Support\Facades\Route;
 
 
-//use POSTMAN to upload an array of pdfs using POST form-data pdf[] to this endpoint, it will handle the rest itself.
-Route::post('upload-pdf', [FileController::class, 'uploadAndProcess']);
 
 //user accessible pages
 Route::view('/','search');

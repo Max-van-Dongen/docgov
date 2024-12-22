@@ -89,16 +89,17 @@ use Illuminate\Support\Facades\Http;
 
 class OpenAIService
 {
-    private $baseUrl = 'http://192.168.1.3:8513'; // Replace with the actual base URL of the alternative API
+    private $baseUrl = 'http://192.168.1.36:8513'; // Replace with the actual base URL of the alternative API
     private $apiKey = 'your-api-key'; // Replace with your actual API key for the alternative service
-    private $apiModel = 'qwen2.5-7b-instruct';
+    private $apiModel = 'qwen2.5-coder-32b-instruct';
 
     private function sendRequest($payload)
     {
+        set_time_limit(120);
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,
             'Content-Type' => 'application/json',
-        ])->post("{$this->baseUrl}/chat", $payload);
+        ])->post("{$this->baseUrl}/v1/chat/completions", $payload);
 
         if ($response->failed()) {
             throw new \Exception('API request failed: ' . $response->body());
@@ -118,7 +119,7 @@ class OpenAIService
         ];
 
         $response = $this->sendRequest($payload);
-
+//        dd($response);
         return $response['choices'][0]['message']['content'];
     }
 

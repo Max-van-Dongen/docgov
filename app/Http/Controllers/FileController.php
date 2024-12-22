@@ -24,81 +24,6 @@ class FileController extends Controller
         $this->openAIService = $openAIService;
     }
 
-    public function uploadAndProcess(Request $request)
-    {
-        $request->validate([
-            'pdf.*' => 'required|file|mimes:pdf|max:20480000000', // Allow multiple files
-        ]);
-
-        try {
-            $uploadedFiles = $request->file('pdf');
-            $processedFiles = [];
-
-            foreach ($uploadedFiles as $file) {
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('uploads', $fileName, 'public');
-
-                $text = $this->pdfService->extractText($file->getPathname());
-
-                $text = $this->truncateTextToTokenLimit($text, 25000);
-
-                $summary = $this->openAIService->summarizeText($text);
-                $title = $this->openAIService->generateTitle($text);
-                $desc = $this->openAIService->generateShortDescription($text);
-                $peopleList = $this->openAIService->extractPeople($text);
-                $keywordsList = $this->openAIService->extractKeywords($text);
-                dd(array_merge($peopleList, $keywordsList,$desc,$summary,$title));
-                // Save File Record
-                $fileRecord = File::create([
-                    'location' => $filePath,
-                    'summary' => $summary,
-                    'title' => $title,
-                    'short_desc' => $desc,
-                    'type_document' => null,
-                    'type_category' => null,
-                    'original_date' => null,
-                ]);
-
-                // Process People
-                foreach ($peopleList as $peopleText) {
-                    $names = preg_split('/\R/', trim($peopleText), -1, PREG_SPLIT_NO_EMPTY);
-
-                    foreach ($names as $name) {
-                        $cleanedName = preg_replace('/^\d+\.\s*/', '', trim($name));
-                        $cleanedName = strtolower($cleanedName);
-                        if (!empty($cleanedName)) {
-                            $person = Person::firstOrCreate(['name' => $cleanedName]);
-                            $fileRecord->people()->attach($person->id);
-                        }
-                    }
-                }
-
-                // Process Keywords
-                foreach ($keywordsList as $keywordsText) {
-                    $keywords = preg_split('/\R/', trim($keywordsText), -1, PREG_SPLIT_NO_EMPTY);
-
-                    foreach ($keywords as $keyword) {
-                        $cleanedKeyword = preg_replace('/^\d+\.\s*/', '', trim($keyword));
-                        $cleanedKeyword = strtolower($cleanedKeyword);
-                        if (!empty($cleanedKeyword)) {
-                            $keywordModel = Keyword::firstOrCreate(['word' => $cleanedKeyword]);
-                            $fileRecord->keywords()->attach($keywordModel->id);
-                        }
-                    }
-                }
-
-                $processedFiles[] = $fileRecord;
-            }
-
-            return response()->json([
-                'message' => 'Files processed successfully!',
-                'data' => $processedFiles,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
 
     public function search(Request $request)
     {
@@ -169,7 +94,7 @@ class FileController extends Controller
                 if ($text == "") {
                     continue;
                 }
-                $text = $this->truncateTextToTokenLimit($text, 25000);
+                $text = $this->truncateTextToTokenLimit($text, 10000);
 
                 // Use AI service to process data
                 $summary = $this->openAIService->summarizeText($text);
