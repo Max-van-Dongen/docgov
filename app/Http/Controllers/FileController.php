@@ -94,6 +94,7 @@ class FileController extends Controller
                 if ($text == "") {
                     continue;
                 }
+                $text_full = $text;
                 $text = $this->truncateTextToTokenLimit($text, 10000);
 
                 // Use AI service to process data
@@ -112,6 +113,7 @@ class FileController extends Controller
                     'type_document' => $item['type_document'] ?? null,
                     'type_category' => $item['type_category'] ?? null,
                     'original_date' => isset($item['original_date']) ? date('Y-m-d H:i:s', strtotime($item['original_date'])) : null,
+                    'full_text' => $text_full,
                 ]);
 
                 // Process people
@@ -121,7 +123,7 @@ class FileController extends Controller
                     foreach ($names as $name) {
                         $cleanedName = preg_replace('/^\d+\.\s*/', '', trim($name));
                         $cleanedName = strtolower($cleanedName);
-                        if (!empty($cleanedName)) {
+                        if (!empty($cleanedName)  && strlen($cleanedName) <= 20) {
                             $person = Person::firstOrCreate(['name' => $cleanedName]);
                             $fileRecord->people()->attach($person->id);
                         }
@@ -135,7 +137,7 @@ class FileController extends Controller
                     foreach ($keywords as $keyword) {
                         $cleanedKeyword = preg_replace('/^\d+\.\s*/', '', trim($keyword));
                         $cleanedKeyword = strtolower($cleanedKeyword);
-                        if (!empty($cleanedKeyword)) {
+                        if (!empty($cleanedKeyword) && strlen($cleanedKeyword) <= 20) {
                             $keywordModel = Keyword::firstOrCreate(['word' => $cleanedKeyword]);
                             $fileRecord->keywords()->attach($keywordModel->id);
                         }
