@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 //user accessible pages
 Route::view('/','search');
+Route::view('/personality','personality');
 Route::get('search', [FileController::class, 'search']);
 Route::view('result/{id}','result-summary');
 Route::view('result/{id}/raw','result-raw');

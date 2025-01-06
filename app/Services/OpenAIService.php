@@ -89,7 +89,7 @@ use Illuminate\Support\Facades\Http;
 
 class OpenAIService
 {
-    private $baseUrl = 'http://192.168.1.36:8513'; // Replace with the actual base URL of the alternative API
+    private $baseUrl = 'http://llm.prsonal.nl'; // Replace with the actual base URL of the alternative API
     private $apiKey = 'your-api-key'; // Replace with your actual API key for the alternative service
     private $apiModel = 'llama-3.2-3b-instruct';
 

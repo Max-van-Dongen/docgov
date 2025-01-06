@@ -83,10 +83,18 @@
             <h1 class="4 mb-0">DocGov</h1>
         </div>
 
-        <!-- Home Button -->
-        <a href="/" class="btn btn-link">
-            <i class="ti ti-home"></i> Home
-        </a>
+        <div>
+            <!-- Home Button -->
+            <a href="/personality" class="btn btn-link">
+                🫵 YOU
+            </a>
+
+            <!-- Home Button -->
+            <a href="/" class="btn btn-link">
+                <i class="ti ti-home"></i> Home
+            </a>
+
+        </div>
     </div>
     @isset($search)
     <p class="text-muted">
