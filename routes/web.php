@@ -27,3 +27,15 @@ Route::get('/load-pdf', [FileController::class, 'showPdf']);
 Route::get('/scrape-data', [FileController::class, 'processScrapedData']);
 Route::get('/clean-pdf', [FileController::class, 'regeneratePdfData']);
 Route::get('/clean-metadata', [FileController::class, 'regenerateMetaData']);
+Route::post('/api/stream-summary', function (\Illuminate\Http\Request $request, \App\Services\OpenAIService $service) {
+    $text = $request->input('text', '');
+
+    // Set headers for streaming response
+    return response()->stream(function () use ($service, $text) {
+        $service->summarizeTextPersonality($text);
+    }, 200, [
+        'Content-Type' => 'text/event-stream',
+        'Cache-Control' => 'no-cache',
+        'Connection' => 'keep-alive',
+    ]);
+});

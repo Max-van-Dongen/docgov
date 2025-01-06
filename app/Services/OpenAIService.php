@@ -108,6 +108,36 @@ class OpenAIService
         return $response->json();
     }
 
+    private function sendStreamingRequest($payload): void
+    {
+        set_time_limit(120);
+
+        // Open a curl session for streaming
+        $ch = curl_init("{$this->baseUrl}/v1/chat/completions");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $this->apiKey,
+            'Content-Type: application/json',
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($curl, $data) {
+            echo $data; // Stream the data chunk by chunk
+            flush();
+            return strlen($data);
+        });
+
+        curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            throw new \Exception('Curl error: ' . curl_error($ch));
+        }
+
+        curl_close($ch);
+    }
+
+
+
     public function summarizeText($text)
     {
         $payload = [
@@ -119,7 +149,6 @@ class OpenAIService
         ];
 
         $response = $this->sendRequest($payload);
-//        dd($response);
         return $response['choices'][0]['message']['content'];
     }
 
@@ -181,5 +210,35 @@ class OpenAIService
         $response = $this->sendRequest($payload);
 
         return array_map('trim', explode(',', $response['choices'][0]['message']['content']));
+    }
+
+    public function summarizeTextPersonality($text): void
+    {
+        // Get the session data
+        $sessionData = session()->only([
+            'name', 'age', 'location', 'interests',
+            'profession', 'education', 'preferred_topics'
+        ]);
+
+        // Combine session data into a personalized context
+        $personalizedContext = "User details:\n";
+        foreach ($sessionData as $key => $value) {
+            $personalizedContext .= ucfirst($key) . ": " . (is_array($value) ? implode(', ', $value) : $value) . "\n";
+        }
+
+        // Construct the payload
+
+        $payload = [
+            'model' => $this->apiModel,
+            'stream' => true,
+            'messages' => [
+                ['role' => 'system', 'content' => 'Provide a personalized summary of the given text, considering the user\'s context provided. The summary should be concise and relevant to the user\'s interests, profession, and other details.'],
+                ['role' => 'assistant', 'content' => $personalizedContext],
+                ['role' => 'user', 'content' => $text],
+            ],
+        ];
+
+        // Stream the response
+        $this->sendStreamingRequest($payload);
     }
 }
