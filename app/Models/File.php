@@ -17,6 +17,7 @@ class File extends Model
         'original_date',
         'type_document',
         'type_category',
+        'full_text',
     ];
 
 
