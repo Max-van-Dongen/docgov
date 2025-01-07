@@ -261,33 +261,26 @@ class FileController extends Controller
                 $peopleList = $this->openAIService->extractPeople($text);
                 $keywordsList = $this->openAIService->extractKeywords($text);
 
-                foreach ($peopleList as $peopleText) {
-                    $names = preg_split('/\R/', trim($peopleText), -1, PREG_SPLIT_NO_EMPTY);
+                // Process the list of people
+                foreach ($peopleList as $cleanedName) {
+                    $cleanedName = strtolower(trim($cleanedName));
 
-                    foreach ($names as $name) {
-                        $cleanedName = preg_replace('/^\d+\.\s*/', '', trim($name));
-                        $cleanedName = strtolower($cleanedName);
-
-                        if (!empty($cleanedName) && strlen($cleanedName) <= 20) {
-                            $person = Person::firstOrCreate(['name' => $cleanedName]);
-                            $file->people()->attach($person->id);
-                        }
+                    if (!empty($cleanedName) && strlen($cleanedName) <= 20) {
+                        $person = Person::firstOrCreate(['name' => $cleanedName]);
+                        $file->people()->attach($person->id);
                     }
                 }
 
-                foreach ($keywordsList as $keywordsText) {
-                    $keywords = preg_split('/\R/', trim($keywordsText), -1, PREG_SPLIT_NO_EMPTY);
+                // Process the list of keywords
+                foreach ($keywordsList as $cleanedKeyword) {
+                    $cleanedKeyword = strtolower(trim($cleanedKeyword));
 
-                    foreach ($keywords as $keyword) {
-                        $cleanedKeyword = preg_replace('/^\d+\.\s*/', '', trim($keyword));
-                        $cleanedKeyword = strtolower($cleanedKeyword);
-
-                        if (!empty($cleanedKeyword) && strlen($cleanedKeyword) <= 20) {
-                            $keywordModel = Keyword::firstOrCreate(['word' => $cleanedKeyword]);
-                            $file->keywords()->attach($keywordModel->id);
-                        }
+                    if (!empty($cleanedKeyword) && strlen($cleanedKeyword) <= 20) {
+                        $keywordModel = Keyword::firstOrCreate(['word' => $cleanedKeyword]);
+                        $file->keywords()->attach($keywordModel->id);
                     }
                 }
+
 
 
             } catch (\Exception $e) {
