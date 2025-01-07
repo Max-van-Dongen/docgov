@@ -1,18 +1,4 @@
 @extends('frontend', ["search" => false])
-@php
-    if (request("name")) {
-        session([
-            "name" => request("name"),
-            "age" => (int)request("age"),
-            "location" => request("location"),
-            "interests" => request("interests"),
-            "profession" => request("profession"),
-            "education" => request("education"),
-            "preferred_topics" => request("preferred_topics"),
-        ]);
-    }
-@endphp
-
 @section("content")
 
     <!-- Personal Profile Page -->
@@ -20,7 +6,7 @@
         <h2 class="text-center mb-4">Personal Profile</h2>
 
         <!-- Profile Form -->
-        <form method="GET" action="/personality">
+        <form method="POST" action="/personality">
             @csrf <!-- Laravel CSRF protection -->
 
             <!-- Name -->

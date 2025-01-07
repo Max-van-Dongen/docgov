@@ -9,10 +9,27 @@ use Illuminate\Support\Facades\Route;
 
 //user accessible pages
 Route::view('/','search');
-Route::view('/personality','personality');
 Route::get('search', [FileController::class, 'search']);
 Route::view('result/{id}','result-summary');
 Route::view('result/{id}/raw','result-raw');
+Route::get('/personality', function () {
+    return view('personality');
+});
+Route::post('/personality', function () {
+    if (request("name")) {
+        session([
+            "name" => request("name"),
+            "age" => (int)request("age"),
+            "location" => request("location"),
+            "interests" => request("interests"),
+            "profession" => request("profession"),
+            "education" => request("education"),
+            "preferred_topics" => request("preferred_topics"),
+        ]);
+    }
+    return redirect('personality');
+});
+
 
 
 //Page to scrape a topic from open.overheid.nl (does not return anything and will time out the web server request, however it keeps alive until finished)
