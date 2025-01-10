@@ -41,7 +41,7 @@ class FileController extends Controller
             ->orWhereHas('keywords', function ($q) use ($query) {
                 $q->where('word', 'like', "%$query%");
             })
-            ->orderBy('created_at', 'desc')
+            ->orderBy('original_date', 'desc')
             ->get();
 
         // Transform the results into an array
