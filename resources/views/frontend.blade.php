@@ -20,7 +20,7 @@
         rel="stylesheet"
     />
     <!-- Tabler Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    <link rel="stylesheet" href="/resources/tabler-icons/tabler-icons.min.css">
 </head>
 <body>
 <!-- Header -->
@@ -142,7 +142,6 @@
                     id="quickSummary"
                     autocomplete="off"
                     {{ request()->is('summary') ? 'checked' : '' }}
-                    {{ !request()->is('summary') && !request()->is('search') ? 'checked' : '' }}
                 />
                 <label class="btn btn-secondary" for="quickSummary">Quick Summary</label>
 
@@ -154,6 +153,7 @@
                     id="inDepth"
                     autocomplete="off"
                     {{ request()->is('search') ? 'checked' : '' }}
+                    {{ !request()->is('summary') && !request()->is('search') ? 'checked' : '' }}
                 />
                 <label class="btn btn-secondary" for="inDepth">In Depth</label>
             </div>
