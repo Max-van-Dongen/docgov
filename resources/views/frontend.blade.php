@@ -184,6 +184,33 @@
         // Let the form submit
         return true;
     }
+    document.addEventListener('DOMContentLoaded', function () {
+        const quickSummaryRadio = document.getElementById('quickSummary');
+        const inDepthRadio = document.getElementById('inDepth');
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.querySelector('input[name="query"]');
+
+        // Helper function to check if search query is non-empty
+        function queryIsNotEmpty() {
+            return searchInput.value.trim() !== '';
+        }
+
+        // Listen for changes on the Quick Summary radio
+        quickSummaryRadio.addEventListener('change', function () {
+            if (queryIsNotEmpty()) {
+                setFormAction();   // sets the appropriate form action
+                searchForm.submit();
+            }
+        });
+
+        // Listen for changes on the In-Depth radio
+        inDepthRadio.addEventListener('change', function () {
+            if (queryIsNotEmpty()) {
+                setFormAction();   // sets the appropriate form action
+                searchForm.submit();
+            }
+        });
+    });
 </script>
 </body>
 </html>
