@@ -1,17 +1,8 @@
-@extends('frontend',["search" => true])
+@extends('frontend',["search" => true, "buttons" => true])
 
 @section("content")
 
-    <!-- Quick Summary/In-Depth Switch -->
-    <div class="d-flex justify-content-center mb-4">
-        <div class="btn-group" role="group">
-            <input type="radio" class="btn-check" name="summarySwitch" autocomplete="off" id="quickSummary" checked>
-            <label class="btn btn-secondary" for="quickSummary">Quick Summary</label>
 
-            <input type="radio" class="btn-check" name="summarySwitch" autocomplete="off" id="inDepth">
-            <label class="btn btn-secondary" for="inDepth">In Depth</label>
-        </div>
-    </div>
 
 
     <!-- Topics Section -->

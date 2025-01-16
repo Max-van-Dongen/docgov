@@ -1,4 +1,4 @@
-@extends('frontend',["search" => true])
+@extends('frontend',["search" => true, "buttons" => true])
 
 @section("content")
 

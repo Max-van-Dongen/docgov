@@ -108,7 +108,7 @@
 
             const text = @json(truncateTextToTokenLimit($file->summary,10000));
             // Fetch the personalized summary from the backend
-            fetch("/api/stream-summary", {
+            fetch("/api/stream-personal-summary", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

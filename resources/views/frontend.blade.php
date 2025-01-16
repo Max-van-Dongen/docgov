@@ -24,11 +24,11 @@
 </head>
 <body>
 <!-- Header -->
-<li class="nav-item align-items-center d-flex" style="position: absolute" >
+<li class="nav-item align-items-center d-flex" style="position: absolute">
     <i class="ti ti-sun"></i>
     <!-- Default switch -->
     <div class="ms-2 form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" id="themingSwitcher" />
+        <input class="form-check-input" type="checkbox" role="switch" id="themingSwitcher"/>
     </div>
     <i class="ti ti-moon"></i>
 </li>
@@ -72,21 +72,30 @@
 </script>
 <div class="container pb-3">
     <div class="d-flex align-items-center justify-content-between">
-        <!-- Back Button -->
-        <a href="javascript:history.back()" class="btn btn-link">
-            <i class="ti ti-arrow-left"></i> Back
-        </a>
+        <div>
+            <!-- Back Button -->
+            <a href="javascript:history.back()" class="btn btn-link">
+                <i class="ti ti-arrow-left"></i> Back
+            </a>
+
+            <!-- Hidden you button for spacing -->
+            <a href="/" class="btn btn-link" style="visibility: hidden">
+                <i class="ti ti-user"></i> YOU
+            </a>
+
+        </div>
 
         <!-- Logo and Title -->
         <div class="text-center">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Logo_rijksoverheid.svg" alt="Logo" width="50" class="mb-1">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Logo_rijksoverheid.svg" alt="Logo" width="50"
+                 class="mb-1">
             <h1 class="4 mb-0">DocGov</h1>
         </div>
 
         <div>
             <!-- Home Button -->
             <a href="/personality" class="btn btn-link">
-                🫵 YOU
+                <i class="ti ti-user"></i> YOU
             </a>
 
             <!-- Home Button -->
@@ -97,22 +106,58 @@
         </div>
     </div>
     @isset($search)
-    <p class="text-muted">
-        Explore official reports, policies, and legislative documents to understand government decisions and
-        initiatives. Search by topic, region, or timeframe to see how public issues are addressed, track the impact of
-        policies, and access data that promotes transparency and accountability in governance.
-    </p>
+        <p class="text-muted">
+            Explore official reports, policies, and legislative documents to understand government decisions and
+            initiatives. Search by topic, region, or timeframe to see how public issues are addressed, track the impact
+            of
+            policies, and access data that promotes transparency and accountability in governance.
+        </p>
 
-    <form action="/search" method="get">
-        <div class="d-flex justify-content-center my-4">
-            <div class="input-group w-75">
-                <input type="text" class="form-control rounded" placeholder="Search..." name="query" value="{{request("query")}}">
-                <span class="input-group-text border-0" id="search-addon">
-        <i class="ti ti-search"></i>
-        </span>
+        <form id="searchForm" method="get" onsubmit="setFormAction()">
+            <div class="d-flex justify-content-center my-4">
+                <div class="input-group w-75">
+                    <input
+                        type="text"
+                        class="form-control rounded"
+                        placeholder="Search..."
+                        name="query"
+                        value="{{ request('query') }}"
+                    />
+                    <span class="input-group-text border-0" id="search-addon">
+                <i class="ti ti-search"></i>
+            </span>
+                </div>
+            </div>
+        </form>
+    @endisset
+    @isset($buttons)
+        <!-- Quick Summary/In-Depth Switch -->
+        <div class="d-flex justify-content-center mb-4">
+            <div class="btn-group" role="group">
+                <!-- Quick Summary -->
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="summarySwitch"
+                    id="quickSummary"
+                    autocomplete="off"
+                    {{ request()->is('summary') ? 'checked' : '' }}
+                    {{ !request()->is('summary') && !request()->is('search') ? 'checked' : '' }}
+                />
+                <label class="btn btn-secondary" for="quickSummary">Quick Summary</label>
+
+                <!-- In Depth -->
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="summarySwitch"
+                    id="inDepth"
+                    autocomplete="off"
+                    {{ request()->is('search') ? 'checked' : '' }}
+                />
+                <label class="btn btn-secondary" for="inDepth">In Depth</label>
             </div>
         </div>
-    </form>
     @endisset
 </div>
 
@@ -126,5 +171,19 @@
     type="text/javascript"
     src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.1.0/mdb.umd.min.js"
 ></script>
+<script>
+    function setFormAction() {
+        // Grab the form
+        const form = document.getElementById('searchForm');
+        // Check which radio is selected
+        if (document.getElementById('inDepth').checked) {
+            form.action = '/search';
+        } else {
+            form.action = '/summary';
+        }
+        // Let the form submit
+        return true;
+    }
+</script>
 </body>
 </html>

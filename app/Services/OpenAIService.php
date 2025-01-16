@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -8,6 +9,7 @@ class OpenAIService
     private $baseUrl = 'http://llm.prsonal.nl';
     private $apiKey = '';
     private $apiModel = 'llama-3.2-3b-instruct';
+    private $bigApiModel = 'qwen2.5-coder-32b-instruct-128k';
 
     private function sendRequest($payload)
     {
@@ -51,7 +53,6 @@ class OpenAIService
 
         curl_close($ch);
     }
-
 
 
     public function summarizeText($text)
@@ -125,7 +126,7 @@ class OpenAIService
         ];
 
         $response = $this->sendRequest($payload);
-        return json_decode($response['choices'][0]['message']['content'],true)['response'] ?? [];
+        return json_decode($response['choices'][0]['message']['content'], true)['response'] ?? [];
     }
 
     public function generatePersonalisedText($text)
@@ -168,7 +169,7 @@ class OpenAIService
         ];
 
         $response = $this->sendRequest($payload);
-        return json_decode($response['choices'][0]['message']['content'],true)['response'] ?? [];
+        return json_decode($response['choices'][0]['message']['content'], true)['response'] ?? [];
     }
 
 
@@ -188,7 +189,7 @@ class OpenAIService
         // Construct the payload
 
         $payload = [
-            'model' => $this->apiModel,
+            'model' => $this->bigApiModel,
             'stream' => true,
             'messages' => [
                 ['role' => 'system', 'content' => 'Provide a personalized summary of the given text, considering the user\'s context provided. The summary should be concise and relevant to the user\'s interests, profession, and other details.'],
@@ -198,6 +199,44 @@ class OpenAIService
         ];
 
         // Stream the response
+        $this->sendStreamingRequest($payload);
+    }
+
+    public function summarizeTextGeneral($text): void
+    {
+        // Get the session data
+        $sessionData = session()->only([
+            'name', 'age', 'location', 'interests',
+            'profession', 'education', 'preferred_topics'
+        ]);
+
+        // Combine session data into a personalized context
+        $personalizedContext = "User details:\n";
+        foreach ($sessionData as $key => $value) {
+            $personalizedContext .= ucfirst($key) . ": " . (is_array($value) ? implode(', ', $value) : $value) . "\n";
+        }
+
+        // Construct the payload
+        $payload = [
+            'model' => $this->apiModel,
+            'stream' => true,
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'Provide a personalized summary of the given text, considering the user\'s context provided. The summary should be concise and relevant to the user\'s interests, profession, and highlights the most important points of all the documents. Summarize all documents into one text, and don\'t add any personalized info to the summary'
+                ],
+                [
+                    'role' => 'assistant',
+                    'content' => $personalizedContext
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $text
+                ],
+            ],
+        ];
+
+        // Stream the response (similar to summarizeTextPersonality)
         $this->sendStreamingRequest($payload);
     }
 }
