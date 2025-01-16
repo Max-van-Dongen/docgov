@@ -87,7 +87,6 @@
                         <div class="modal-body">
                             <div id="summaryContent">
                                 <!-- Streaming content will be appended here -->
-                                <p>Loading personalized summary...</p>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -104,7 +103,7 @@
 
             // Clear previous content
             const summaryContent = document.getElementById("summaryContent");
-            summaryContent.innerHTML = "<p>Loading personalized summary...</p>";
+            summaryContent.innerHTML = "";
 
             const text = @json(truncateTextToTokenLimit($file->summary,10000));
             // Fetch the personalized summary from the backend

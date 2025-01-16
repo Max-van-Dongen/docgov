@@ -189,7 +189,7 @@ class OpenAIService
         // Construct the payload
 
         $payload = [
-            'model' => $this->bigApiModel,
+            'model' => $this->apiModel,
             'stream' => true,
             'messages' => [
                 ['role' => 'system', 'content' => 'Provide a personalized summary of the given text, considering the user\'s context provided. The summary should be concise and relevant to the user\'s interests, profession, and other details.'],
