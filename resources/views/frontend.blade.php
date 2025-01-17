@@ -63,6 +63,13 @@
 
     // Add listener to toggle theme with Shift + D
     document.addEventListener("keydown", (e) => {
+        const tagName = e.target.tagName.toLowerCase();
+        const type = (e.target.type || "").toLowerCase();
+
+        if (tagName === "input" || tagName === "textarea" || type === "text") {
+            return;
+        }
+
         if (e.shiftKey && e.key === "D") {
             themeStitcher.checked = !themeStitcher.checked;
             toggleTheme(themeStitcher.checked);
