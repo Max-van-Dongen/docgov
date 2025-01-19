@@ -9,7 +9,7 @@ class OpenAIService
     private $baseUrl = 'http://llm.prsonal.nl';
     private $apiKey = '';
     private $apiModel = 'llama-3.2-3b-instruct';
-    private $bigApiModel = 'phi-4';//'qwen2.5-coder-32b-instruct-128k';
+    private $bigApiModel = 'sky-t1-32b-preview';
 
     private function sendRequest($payload)
     {
@@ -175,18 +175,15 @@ class OpenAIService
 
     public function summarizeTextPersonality($text): void
     {
-        // Get the session data
         $sessionData = session()->only([
             'name', 'age', 'location', 'interests',
             'profession', 'education', 'preferred_topics'
         ]);
 
-        // Combine session data into a personalized context
         $personalizedContext = "User details:\n";
         foreach ($sessionData as $key => $value) {
             $personalizedContext .= ucfirst($key) . ": " . (is_array($value) ? implode(', ', $value) : $value) . "\n";
         }
-        // Construct the payload
 
         $payload = [
             'model' => $this->bigApiModel,
@@ -202,28 +199,31 @@ class OpenAIService
         $this->sendStreamingRequest($payload);
     }
 
-    public function summarizeTextGeneral($text): void
+    public function summarizeSearchResults($text): void
     {
-        // Get the session data
         $sessionData = session()->only([
             'name', 'age', 'location', 'interests',
             'profession', 'education', 'preferred_topics'
         ]);
 
-        // Combine session data into a personalized context
         $personalizedContext = "User details:\n";
         foreach ($sessionData as $key => $value) {
-            $personalizedContext .= ucfirst($key) . ": " . (is_array($value) ? implode(', ', $value) : $value) . "\n";
+            $personalizedContext .= ucfirst($key) . ": "
+                . (is_array($value) ? implode(', ', $value) : $value) . "\n";
         }
 
-        // Construct the payload
         $payload = [
             'model' => $this->bigApiModel,
             'stream' => true,
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'Provide a personalized summary of the given text, considering the user\'s context provided. The summary should be concise and relevant to the user\'s interests, profession, and highlights the most important points of all the documents. Summarize all documents into one text, and don\'t add any personalized info to the summary'
+                    'content' =>
+                        "You are a helpful assistant tasked with providing a concise, unified summary of the given search results. " .
+                        "Use the user's context only to shape the tone of the summary and to highlight what might be most relevant to them. " .
+                        "Do NOT include or reveal any personal details (like the user's name, age, location, etc.) in the summary. " .
+                        "Focus on the key points from all documents, and present them as a coherent overview, do NOT summarize each result on it's own. " .
+                        "You may use short paragraphs or bullet points, and a brief concluding sentence or two. "
                 ],
                 [
                     'role' => 'assistant',
@@ -236,7 +236,8 @@ class OpenAIService
             ],
         ];
 
-        // Stream the response (similar to summarizeTextPersonality)
+        // Stream the response to the client
         $this->sendStreamingRequest($payload);
     }
+
 }
