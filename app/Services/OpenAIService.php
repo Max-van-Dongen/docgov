@@ -30,6 +30,11 @@ class OpenAIService
     {
         set_time_limit(120);
 
+        // Check if the AI service is available and stream its status
+        if (!$this->streamAIServiceAvailability()) {
+            return; // Exit if the service is down
+        }
+
         // Open a curl session for streaming
         $ch = curl_init("{$this->baseUrl}/v1/chat/completions");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
@@ -238,6 +243,43 @@ class OpenAIService
 
         // Stream the response to the client
         $this->sendStreamingRequest($payload);
+    }
+
+    private function streamAIServiceAvailability(): bool
+    {
+        $ch = curl_init("{$this->baseUrl}/v1/models");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $this->apiKey,
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 1); // Set timeout to 2 seconds
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch) || !$response) {
+            $unavailableMessage = json_encode([
+                "id" => uniqid("chatcmpl-"),
+                "object" => "chat.completion.chunk",
+                "created" => time(),
+                "model" => "sky-t1-32b-preview",
+                "system_fingerprint" => "sky-t1-32b-preview",
+                "choices" => [
+                    [
+                        "index" => 0,
+                        "delta" => ["role" => "assistant", "content" => "AI Service is currently unavailable."],
+                        "logprobs" => null,
+                        "finish_reason" => null,
+                    ],
+                ],
+            ]);
+            echo "data: {$unavailableMessage}\n\n";
+            flush();
+            curl_close($ch);
+            return false;
+        }
+
+        curl_close($ch);
+        return true;
     }
 
 }
