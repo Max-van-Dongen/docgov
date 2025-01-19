@@ -21,6 +21,16 @@
     />
     <!-- Tabler Icons -->
     <link rel="stylesheet" href="/resources/tabler-icons/tabler-icons.min.css">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RB0QS140E3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-RB0QS140E3');
+    </script>
 </head>
 <body>
 <!-- Header -->
