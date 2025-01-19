@@ -9,7 +9,7 @@ class OpenAIService
     private $baseUrl = 'http://llm.prsonal.nl';
     private $apiKey = '';
     private $apiModel = 'llama-3.2-3b-instruct';
-    private $bigApiModel = 'qwen2.5-coder-32b-instruct-128k';
+    private $bigApiModel = 'phi-4';//'qwen2.5-coder-32b-instruct-128k';
 
     private function sendRequest($payload)
     {
@@ -189,7 +189,7 @@ class OpenAIService
         // Construct the payload
 
         $payload = [
-            'model' => $this->apiModel,
+            'model' => $this->bigApiModel,
             'stream' => true,
             'messages' => [
                 ['role' => 'system', 'content' => 'Provide a personalized summary of the given text, considering the user\'s context provided. The summary should be concise and relevant to the user\'s interests, profession, and other details.'],
@@ -218,7 +218,7 @@ class OpenAIService
 
         // Construct the payload
         $payload = [
-            'model' => $this->apiModel,
+            'model' => $this->bigApiModel,
             'stream' => true,
             'messages' => [
                 [
