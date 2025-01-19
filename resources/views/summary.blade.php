@@ -8,7 +8,14 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
+        let totalText = "";
+        function MarkdownText() {
+            // Append rendered markdown to the summary container
+            summaryContent.innerHTML = marked.parse(totalText);
+
+        }
         async function fetchSummary(query) {
             const url = `/api/stream-results-summary?q=${encodeURIComponent(query)}`;
 
@@ -47,8 +54,9 @@
                                     const content = parsed?.choices?.[0]?.delta?.content;
 
                                     if (content) {
-                                        // Append content to our summary container
-                                        summaryContent.innerHTML += content;
+                                        totalText += content;
+                                        MarkdownText();
+                                        // Render the markdown content
                                     }
                                 } catch (e) {
                                     console.error("Failed to parse line:", line, e);
@@ -59,9 +67,10 @@
                         // Read the next chunk
                         return reader.read().then(processChunk);
                     });
-                })
-                .cat
+                });
         }
+
+
 
         // Automatically fetch summary based on ?q=...
         fetchSummary('{{ request()->query("query") }}');

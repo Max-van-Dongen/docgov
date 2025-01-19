@@ -68,42 +68,48 @@
 @extends('result-layout')
 
 @section("pdf-content")
-            <div class="col-md-8">
-                <div class="card shadow-sm p-4">
-                    <h5>Summary</h5>
-                    <p class="text-muted">
-                        {!! $rendered !!}
-                    </p>
-                    <button class="btn btn-outline-primary mt-3" id="summaryButton">What does this mean for me?</button>
+    <div class="col-md-8">
+        <div class="card shadow-sm p-4">
+            <h5>Summary</h5>
+            <p class="text-muted">
+                {!! $rendered !!}
+            </p>
+            <button class="btn btn-outline-primary mt-3" id="summaryButton">What does this mean for me?</button>
+        </div>
+    </div>
+    <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="summaryModalLabel">Personalized Summary</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="summaryModalLabel">Personalized Summary</h5>
-                            <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div id="summaryContent">
-                                <!-- Streaming content will be appended here -->
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Close</button>
-                        </div>
+                <div class="modal-body">
+                    <div id="summaryContent">
+                        <!-- Streaming content will be appended here -->
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Close</button>
+                </div>
             </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
+        let totalText = "";
+        const summaryContent = document.getElementById("summaryContent");
+        function MarkdownText() {
+            // Append rendered markdown to the summary container
+            summaryContent.innerHTML = marked.parse(totalText);
+
+        }
         document.getElementById("summaryButton").addEventListener("click", function () {
             // Open the modal
             const summaryModal = new mdb.Modal(document.getElementById("summaryModal"));
             summaryModal.show();
 
             // Clear previous content
-            const summaryContent = document.getElementById("summaryContent");
-            summaryContent.innerHTML = "";
 
             const text = @json(truncateTextToTokenLimit($file->summary,10000));
             // Fetch the personalized summary from the backend
@@ -126,13 +132,13 @@
 
                     let partialData = "";
 
-                    return reader.read().then(function processChunk({ done, value }) {
+                    return reader.read().then(function processChunk({done, value}) {
                         if (done) {
                             return;
                         }
 
                         // Decode the received chunk and append it to the buffer
-                        partialData += decoder.decode(value, { stream: true });
+                        partialData += decoder.decode(value, {stream: true});
 
                         // Process chunks to extract content
                         const lines = partialData.split("\n");
@@ -150,8 +156,8 @@
                                     const content = parsed?.choices[0]?.delta?.content;
 
                                     if (content) {
-                                        // Append content to the modal
-                                        summaryContent.innerHTML += content;
+                                        totalText += content;
+                                        MarkdownText();
                                     }
                                 } catch (e) {
                                     console.error("Failed to parse line:", line, e);
