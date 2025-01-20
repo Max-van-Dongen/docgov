@@ -42,9 +42,12 @@
             </div>
         </div>
         <div class="d-flex justify-content-end mt-4">
-            <button class="btn btn-primary mt-4" onclick="window.location = '/browse'">
+            <!-- <button class="btn btn-primary mt-4" onclick="window.location = '/browse'">
                 <i class="ti ti-search"></i> Browse All Topics
-            </button>
+            </button> -->
+            <a href="browse" class="btn btn-link">
+                <i class="ti ti-search"></i> Browse All Topics
+            </a>
         </div>
     </div>
 
