@@ -1,5 +1,13 @@
-@extends('frontend',["search" => true, "buttons" => true])
+@php
+    // Flatten all keywords from the results
+    $allKeywords = $results->pluck('keywords')->flatten();
+    $keywordCounts = $allKeywords->countBy();
+    
+    $topKeywords = $keywordCounts->sortDesc()->keys()->take(10);
+    $topKeywordsWithCounts = $keywordCounts->sortDesc()->take(10);
+@endphp
 
+@extends('frontend',["search" => true, "buttons" => true])
 @section("content")
 
     <!-- Main Content -->
@@ -28,10 +36,10 @@
                     @endforeach
                 </div>
                 <h6 class="my-3">Keywords</h6>
-                <div class="list-group" id="keywords-container" data-keywords="{{ json_encode($results->pluck('keywords')->flatten()->unique()->take(10)) }}">
+                <div class="list-group" id="keywords-container" data-keywords="{{ json_encode($topKeywords) }}">
                     <button class="list-group-item list-group-item-action active" onclick="applyFilter('allKey')" id="allKey">All Keywords</button>
 
-                    @foreach($results->pluck('keywords')->flatten()->unique()->take(10) as $keyword)
+                    @foreach($topKeywords as $keyword)
                         <button class="list-group-item list-group-item-action" onclick="applyFilter('{{ $keyword }}')" id="{{ $keyword }}">
                             {{ $keyword }}
                         </button>
@@ -46,6 +54,8 @@
                 <!-- Word Web PH -->
                 <button id="toggle-word-web" class="btn btn-primary mb-4">Hide Word Web</button>
                 <div id="word-web-container" class="mb-4"></div>
+                <div id="results-container" result-data="{{ json_encode($results->take(10)) }}"></div>
+                <div id="keywords-count-container" result-data="{{ json_encode($topKeywordsWithCounts) }}"></div>
                 <h5 class="mb-3">Results ({{$results->count()}})</h5>
 
                 @if($results->isEmpty())
@@ -107,6 +117,11 @@
     <!-- idk hoe dit werkt dus heb het in een apart <script /> ding gedaan -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
+        // const results = JSON.parse(document.getElementById("results-container").getAttribute("result-data"));
+        // console.log("Results:", results);
+        // const keywordsCount = JSON.parse(document.getElementById("keywords-count-container").getAttribute("result-data"));
+        // console.log("Keywords w Count:", keywordsCount);
+
         document.addEventListener("DOMContentLoaded", () => {
             const keywordsContainer = document.getElementById("keywords-container");
             const urlParams = new URLSearchParams(window.location.search);
@@ -129,6 +144,8 @@
             // Soms wordt er een object ipv een array teruggegeven, dit lost dat op
             try {
                 const rawKeywords = JSON.parse(container.getAttribute("data-keywords"));
+                console.log("Keywords:", rawKeywords);
+                console.log("Main search:", mainSearch);
 
                 if (Array.isArray(rawKeywords)) {
                     return rawKeywords.filter(keyword => keyword !== mainSearch);
@@ -145,6 +162,8 @@
         }
 
         function renderWordWeb(mainSearch, keywords) {
+            const keywordWithCount = JSON.parse(document.getElementById("keywords-count-container").getAttribute("result-data"))
+            console.log("Keywords w Count:", keywordWithCount);
             const graphData = {
                 nodes: [{ id: mainSearch, group: 1 }, ...keywords.map(k => ({ id: k, group: 2 }))],
                 links: keywords.map(k => ({ source: mainSearch, target: k }))
@@ -167,7 +186,7 @@
                 .attr("y2", d => getNodeY(d.target, mainSearch));
 
             const node = svg.append("g").selectAll("circle").data(graphData.nodes).enter().append("circle")
-                .attr("r", 62)
+                .attr("r", d => getNodeSize(d.id))
                 .attr("fill", d => d.group === 1 ? "#FFFFFF" : "#154273")
                 .attr("stroke", d => d.group === 1 ? "#3c3c3c" : "none") // Rand bij middelste ding voor zichtbaarheid light mode
                 .attr("stroke-width", d => d.group === 1 ? 2 : 0) // Rand bij middelste ding voor zichtbaarheid light mode
@@ -177,7 +196,6 @@
                 .on("click", (event, d) => handleNodeClick(d, mainSearch)); // Navigate naar keyword
                 
             const text = svg.append("g").selectAll("text").data(graphData.nodes).enter().append("text")
-                .text(d => d.id)
                 .attr("font-size", d => getFontSize(d.id)) 
                 .attr("fill", d => d.group === 1 ? "black" : "white")
                 .attr("dy", 4)
@@ -185,12 +203,65 @@
                 .style("cursor", d => d.group !== 1 ? "pointer": null)
                 .attr("x", (d, i) => calculatePosition(i, centerX, radius, "cos"))
                 .attr("y", (d, i) => calculatePosition(i, centerY, radius, "sin"))
-                .on("click", (event, d) => handleNodeClick(d, mainSearch)); // Navigate naar keyword
+                .on("click", (event, d) => handleNodeClick(d, mainSearch))
+                .each(function (d, i) {
+                    const maxNodeSize = getNodeSize(d.id); 
+                    const maxWidth = maxNodeSize * 2; // Adjust width relative to node size
+                    const lines = splitTextIntoLines(d.id, maxWidth);
+
+                    const lineHeight = 12;
+                    const textElement = d3.select(this);
+
+                    lines.forEach((line, lineIndex) => {
+                        textElement.append("tspan")
+                            .text(line)
+                            .attr("x", calculatePosition(i, centerX, radius, "cos")) 
+                            .attr("y", calculatePosition(i, centerY, radius, "sin") + lineIndex * lineHeight - (lines.length - 1) * lineHeight / 2)
+                            .attr("dy", 4);
+                    });
+                });
             
             // Zorgt ervoor dat de tekst in t ding past, kan beter
             function getFontSize(text) {
                 const maxFontSize = 16, minFontSize = 11, maxLength = 4;
                 return Math.max(minFontSize, maxFontSize - Math.floor(text.length / maxLength));
+            }
+
+            function getNodeSize(id) {
+                const sizes = [40, 45, 50, 60];
+                if (id === mainSearch) {
+                    return 62;
+                }
+                if (typeof keywordWithCount === 'object') {
+                    const keys = Object.keys(keywordWithCount);
+                    const values = Object.values(keywordWithCount);
+                    const highestCount = Math.max(...values);
+
+                    const index = keys.indexOf(id);
+                    if (highestCount <= 5){
+                        const count = values[index];
+                        if (count >= 3) {
+                            return sizes[3];
+                        } else if (count >= 2) {
+                            return sizes[2];
+                        } else {
+                            return sizes[1];
+                        }
+                    }
+                    if (index !== -1) {
+                        const count = values[index];
+                        if (count >= highestCount / 1.5) {
+                            return sizes[3];
+                        } else if (count >= highestCount / 2) {
+                            return sizes[2];
+                        } else if (count >= highestCount / 3) {
+                            return sizes[1];
+                        } else {
+                            return sizes[0];
+                        }
+                    }
+                }
+                return 62;
             }
             
             // Node posities berekenen
@@ -208,6 +279,50 @@
                 if (node.id !== mainSearch) {
                     window.location.href = `/search?query=${encodeURIComponent(node.id)}`;
                 }
+            }
+
+            function splitTextIntoLines(text, maxWidth) {
+                const isOneWord = text.split(" ").length === 1;
+                const words = text.split(" ");
+
+                const lines = [];
+                let currentLine = "";
+
+                if (isOneWord) {
+                    let currentIndex = 0;
+                    while (currentIndex < text.length) {
+                        let nextIndex = currentIndex + 1;
+                        while (
+                            nextIndex <= text.length &&
+                            getTextWidth(text.slice(currentIndex, nextIndex) + "-", "12px Arial") <= maxWidth
+                        ) {
+                            nextIndex++;
+                        }
+                        lines.push(text.slice(currentIndex, nextIndex - 1) + (nextIndex - 1 < text.length ? "-" : ""));
+                        currentIndex = nextIndex - 1; 
+                    }
+                } else {
+                    for (let i = 0; i < words.length; i++) {
+                        const word = words[i];
+                        const testLine = currentLine ? `${currentLine} ${word}` : word;
+
+                        if (getTextWidth(testLine, "12px Arial") <= maxWidth) {
+                            currentLine = testLine;
+                        } else {
+                            if (currentLine) lines.push(currentLine);
+                            currentLine = word;
+                        }
+                    }
+                    if (currentLine) lines.push(currentLine);
+                }
+                return lines;
+            }
+
+            function getTextWidth(text, font) {
+                const canvas = document.createElement("canvas");
+                const context = canvas.getContext("2d");
+                context.font = font;
+                return context.measureText(text).width;
             }
             
         }

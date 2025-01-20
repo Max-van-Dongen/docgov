@@ -9,7 +9,7 @@
             <!-- Topic 1 -->
             <div class="col">
                 <button class="btn w-100 py-4 border shadow-sm text-center"
-                        onclick="window.location = '/search?query=Huis'">
+                        onclick="window.location = '/search?query=Huisvesting'">
                     <i class="ti ti-home-2 fs-1 mb-2 text-primary"></i>
                     <p class="mb-0">Housing & Properties</p>
                 </button>
