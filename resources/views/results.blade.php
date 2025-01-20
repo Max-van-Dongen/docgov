@@ -28,7 +28,7 @@
                     @endforeach
                 </div>
                 <h6 class="my-3">Keywords</h6>
-                <div class="list-group">
+                <div class="list-group" id="keywords-container" data-keywords="{{ json_encode($results->pluck('keywords')->flatten()->unique()->take(10)) }}">
                     <button class="list-group-item list-group-item-action active" onclick="applyFilter('allKey')" id="allKey">All Keywords</button>
 
                     @foreach($results->pluck('keywords')->flatten()->unique()->take(10) as $keyword)
@@ -40,11 +40,12 @@
             </div>
         </div>
 
-
-
         <!-- Results (Center Column) -->
         <div class="col-md-6">
             <div class="mb-4">
+                <!-- Word Web PH -->
+                <button id="toggle-word-web" class="btn btn-primary mb-4">Hide Word Web</button>
+                <div id="word-web-container" class="mb-4"></div>
                 <h5 class="mb-3">Results ({{$results->count()}})</h5>
 
                 @if($results->isEmpty())
@@ -103,6 +104,120 @@
 
 
     </div>
+    <!-- idk hoe dit werkt dus heb het in een apart <script /> ding gedaan -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const keywordsContainer = document.getElementById("keywords-container");
+            const urlParams = new URLSearchParams(window.location.search);
+            const mainSearch = urlParams.get('query') || urlParams.get('keyword') || "Geen idee";
+
+            const keywords = parseKeywords(keywordsContainer, mainSearch);
+            if (keywords.length > 0) {
+                renderWordWeb(mainSearch, keywords);
+            }
+
+            const toggleButton = document.getElementById("toggle-word-web");
+            toggleButton.addEventListener("click", toggleWordWebVisibility);
+        });
+
+        function parseKeywords(container, mainSearch) {
+            // Soms wordt er een object ipv een array teruggegeven, dit lost dat op
+            try {
+                const rawKeywords = JSON.parse(container.getAttribute("data-keywords"));
+
+                if (Array.isArray(rawKeywords)) {
+                    return rawKeywords.filter(keyword => keyword !== mainSearch);
+                } else if (typeof rawKeywords === 'object') {
+                    return Object.values(rawKeywords).filter(keyword => keyword !== mainSearch);
+                } else {
+                    console.error("Invalid keywords format: expected an array or object.");
+                    return [];
+                }
+            } catch (error) {
+                console.error("Error parsing 'data-keywords':", error);
+                return [];
+            }
+        }
+
+        function renderWordWeb(mainSearch, keywords) {
+            const graphData = {
+                nodes: [{ id: mainSearch, group: 1 }, ...keywords.map(k => ({ id: k, group: 2 }))],
+                links: keywords.map(k => ({ source: mainSearch, target: k }))
+            };
+
+            const width = 550, height = 550, radius = 205;
+            const svg = d3.select("#word-web-container").append("svg").attr("width", width).attr("height", height);
+            const centerX = width / 2, centerY = height / 2;
+            
+            // Posities berekenen
+            const angleForIndex = i => (i / (graphData.nodes.length - 1)) * (2 * Math.PI);
+            const calculatePosition = (i, center, radius, axis) => i === 0 ? center : center + radius * Math[axis](angleForIndex(i));
+
+            const link = svg.append("g").selectAll("line").data(graphData.links).enter().append("line")
+                .attr("stroke-width", 2)
+                .attr("stroke", "#aaa")
+                .attr("x1", d => getNodeX(d.source, mainSearch))
+                .attr("y1", d => getNodeY(d.source, mainSearch))
+                .attr("x2", d => getNodeX(d.target, mainSearch))
+                .attr("y2", d => getNodeY(d.target, mainSearch));
+
+            const node = svg.append("g").selectAll("circle").data(graphData.nodes).enter().append("circle")
+                .attr("r", 62)
+                .attr("fill", d => d.group === 1 ? "#FFFFFF" : "#154273")
+                .attr("stroke", d => d.group === 1 ? "#3c3c3c" : "none") // Rand bij middelste ding voor zichtbaarheid light mode
+                .attr("stroke-width", d => d.group === 1 ? 2 : 0) // Rand bij middelste ding voor zichtbaarheid light mode
+                .style("cursor", d => d.group !== 1 ? "pointer": null)
+                .attr("cx", (d, i) => calculatePosition(i, centerX, radius, "cos"))
+                .attr("cy", (d, i) => calculatePosition(i, centerY, radius, "sin"))
+                .on("click", (event, d) => handleNodeClick(d, mainSearch)); // Navigate naar keyword
+                
+            const text = svg.append("g").selectAll("text").data(graphData.nodes).enter().append("text")
+                .text(d => d.id)
+                .attr("font-size", d => getFontSize(d.id)) 
+                .attr("fill", d => d.group === 1 ? "black" : "white")
+                .attr("dy", 4)
+                .attr("text-anchor", "middle")
+                .style("cursor", d => d.group !== 1 ? "pointer": null)
+                .attr("x", (d, i) => calculatePosition(i, centerX, radius, "cos"))
+                .attr("y", (d, i) => calculatePosition(i, centerY, radius, "sin"))
+                .on("click", (event, d) => handleNodeClick(d, mainSearch)); // Navigate naar keyword
+            
+            // Zorgt ervoor dat de tekst in t ding past, kan beter
+            function getFontSize(text) {
+                const maxFontSize = 16, minFontSize = 11, maxLength = 4;
+                return Math.max(minFontSize, maxFontSize - Math.floor(text.length / maxLength));
+            }
+            
+            // Node posities berekenen
+            function getNodeX(id, mainSearch) {
+                const nodeIndex = graphData.nodes.findIndex(node => node.id === id);
+                return calculatePosition(nodeIndex, centerX, radius, "cos");
+            }
+            function getNodeY(id, mainSearch) {
+                const nodeIndex = graphData.nodes.findIndex(node => node.id === id);
+                return calculatePosition(nodeIndex, centerY, radius, "sin");
+            }
+
+            // Navigeer naar nieuwe zoekopdracht
+            function handleNodeClick(node, mainSearch) {
+                if (node.id !== mainSearch) {
+                    window.location.href = `/search?query=${encodeURIComponent(node.id)}`;
+                }
+            }
+            
+        }
+
+        function toggleWordWebVisibility() {
+            const wordWebContainer = document.getElementById("word-web-container");
+            if (wordWebContainer.style.display === "none") {
+                wordWebContainer.style.display = "block";
+            } else {
+                wordWebContainer.style.display = "none";
+            }
+        }
+
+    </script>
     <script>
         let activeFilters = {
             keyword: 'allKey',
@@ -170,5 +285,14 @@
             updateResults();
         }
     </script>
+    <style>
+        /* CSS god enzo */
+        #word-web-container {
+            width: 500px; 
+            height: 500px; 
+            margin: auto;
+        }
+    </style>
+
 
 @endsection
