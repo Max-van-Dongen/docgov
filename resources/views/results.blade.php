@@ -113,8 +113,12 @@
             const mainSearch = urlParams.get('query') || urlParams.get('keyword') || "Geen idee";
 
             const keywords = parseKeywords(keywordsContainer, mainSearch);
-            if (keywords.length > 0) {
+            if (keywords.length > 0 && mainSearch !== "Geen idee") {
                 renderWordWeb(mainSearch, keywords);
+            }
+            else {
+                document.getElementById("word-web-container").style.display = "none";
+                document.getElementById("toggle-word-web").style.display = "none";
             }
 
             const toggleButton = document.getElementById("toggle-word-web");

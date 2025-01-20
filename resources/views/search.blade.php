@@ -41,6 +41,11 @@
                 </button>
             </div>
         </div>
+        <div class="d-flex justify-content-end mt-4">
+            <button class="btn btn-primary mt-4" onclick="window.location = '/browse'">
+                <i class="ti ti-search"></i> Browse All Topics
+            </button>
+        </div>
     </div>
 
 @endsection

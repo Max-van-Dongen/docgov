@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'search');
 Route::get('search', [FileController::class, 'search']);
 Route::view('summary', 'summary');
+Route::view('browse', 'browse');
 Route::view('result/{id}', 'result-summary');
 Route::view('result/{id}/raw', 'result-raw');
 Route::get('/personality', function () {
