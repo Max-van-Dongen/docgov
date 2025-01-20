@@ -210,12 +210,41 @@ class FileController extends Controller
 
     public function regeneratePdfData()
     {
-        $files = File::whereNotNull('full_text')->where('full_text', '!=', '')->orderBy('updated_at','asc')->get();
+        $files = File::whereNotNull('full_text')->where('full_text', '!=', '')->orderBy('updated_at','asc')->where('id',282)->get();
+        $totalFiles = $files->count();
+        if ($totalFiles === 0) {
+            echo "No files found.\n";
+            return;
+        }
+
+        // Track start time
+        $startTime = microtime(true);
+        $processedCount = 0;
 
         foreach ($files as $file) {
-            try {
-                $text = $file->full_text;
+            // Calculate how many have already been processed (i.e., before this file)
+            $processedSoFar = $processedCount;
 
+            // Don’t do average time math if it’s the first iteration
+            if ($processedSoFar > 0) {
+                $elapsed = microtime(true) - $startTime;
+                $avgTimePerFile = $elapsed / $processedSoFar;
+                $remaining = $totalFiles - $processedSoFar;
+                $estimatedTimeRemaining = $remaining * $avgTimePerFile;
+            } else {
+                $estimatedTimeRemaining = 0;
+            }
+
+            // Output progress info
+            echo "Processing file "
+                . ($processedCount + 1) . " / $totalFiles ... ";
+            echo "Estimated time remaining: "
+                . gmdate("H:i:s", $estimatedTimeRemaining) . "\n";
+
+            try {
+
+                $text = $file->full_text;
+                $text = $this->truncateTextToTokenLimit($text, 8000);
                 if (!$text) {
                     Log::warning('File with ID ' . $file->id . ' has no full_text.');
                     continue;
@@ -227,32 +256,64 @@ class FileController extends Controller
                 $desc = $this->openAIService->generateShortDescription($text);
 
                 // Save updates back to the database
+                echo "Title: " . $title . "\n";
+                echo "Summary: " . $summary . "\n";
+                echo "Desc: " . $desc . "\n";
                 $file->summary = $summary;
                 $file->title = $title;
                 $file->short_desc = $desc;
                 $file->save();
 
-
             } catch (\Exception $e) {
                 Log::error('Error processing File ID ' . $file->id, ['message' => $e->getMessage()]);
             }
+
+            $processedCount++;
         }
     }
 
     public function regenerateMetaData()
     {
+        echo "Truncating Person and Keyword tables...\n";
+
         // Truncate related tables
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         Person::truncate();
         Keyword::truncate();
+        DB::statement('TRUNCATE `pdf_people`;');
+        DB::statement('TRUNCATE `pdf_keywords`;');
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $files = File::whereNotNull('full_text')->where('full_text', '!=', '')->get();
+        $totalFiles = $files->count();
+        if ($totalFiles === 0) {
+            echo "No files found.\n";
+            return;
+        }
+
+        $startTime = microtime(true);
+        $processedCount = 0;
 
         foreach ($files as $file) {
-            try {
-                $text = $file->full_text;
+            // Calculate progress details
+            $processedSoFar = $processedCount;
 
+            if ($processedSoFar > 0) {
+                $elapsed = microtime(true) - $startTime;
+                $avgTimePerFile = $elapsed / $processedSoFar;
+                $remaining = $totalFiles - $processedSoFar;
+                $estimatedTimeRemaining = $remaining * $avgTimePerFile;
+            } else {
+                $estimatedTimeRemaining = 0;
+            }
+
+            echo "Processing file "
+                . ($processedCount + 1) . " / $totalFiles ... ";
+            echo "Estimated time remaining: "
+                . gmdate("H:i:s", $estimatedTimeRemaining) . "\n";
+            try {
+
+                $text = $file->full_text;
                 if (!$text) {
                     Log::warning('File with ID ' . $file->id . ' has no full_text.');
                     continue;
@@ -264,8 +325,8 @@ class FileController extends Controller
                 // Process the list of people
                 foreach ($peopleList as $cleanedName) {
                     $cleanedName = strtolower(trim($cleanedName));
-
                     if (!empty($cleanedName) && strlen($cleanedName) <= 20) {
+                        echo "Found Person: {$cleanedName}\n";
                         $person = Person::firstOrCreate(['name' => $cleanedName]);
                         $file->people()->attach($person->id);
                     }
@@ -274,21 +335,21 @@ class FileController extends Controller
                 // Process the list of keywords
                 foreach ($keywordsList as $cleanedKeyword) {
                     $cleanedKeyword = strtolower(trim($cleanedKeyword));
-
                     if (!empty($cleanedKeyword) && strlen($cleanedKeyword) <= 20) {
+                        echo "Found Keyword: {$cleanedKeyword}\n";
                         $keywordModel = Keyword::firstOrCreate(['word' => $cleanedKeyword]);
                         $file->keywords()->attach($keywordModel->id);
                     }
                 }
 
-
-
             } catch (\Exception $e) {
                 Log::error('Error processing File ID ' . $file->id, ['message' => $e->getMessage()]);
             }
-        }
 
+            $processedCount++;
+        }
     }
+
 
 
 }

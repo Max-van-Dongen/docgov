@@ -79,7 +79,7 @@ class OpenAIService
         $payload = [
             'model' => $this->apiModel,
             'messages' => [
-                ['role' => 'system', 'content' => 'You are a helpful assistant that generates concise titles for documents in Dutch. Do not add any extra info or sentences, only generate the title.'],
+                ['role' => 'system', 'content' => 'You are a helpful assistant that generates concise titles for documents in Dutch. Do not add any extra info or sentences, only generate the title. Do NOT create a list.'],
                 ['role' => 'user', 'content' => "Generate a short title for this content: {$text}"],
             ],
         ];
