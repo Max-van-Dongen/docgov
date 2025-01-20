@@ -1,4 +1,4 @@
-@extends('frontend', ["search" => false, "buttons" => false])
+@extends('frontend', ["search" => false])
 @section("content")
 
 <!-- Topics Section -->
