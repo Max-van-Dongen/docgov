@@ -52,8 +52,8 @@
         <div class="col-md-6">
             <div class="mb-4">
                 <!-- Word Web PH -->
-                <button id="toggle-word-web" class="btn btn-primary mb-4">Hide Word Web</button>
-                <div id="word-web-container" class="mb-4"></div>
+                <button id="toggle-word-web" class="btn btn-primary mb-4" style="display: none;">Hide Word Web</button>
+                <div id="word-web-container" class="mb-4" style="display: none;"></div>
                 <div id="results-container" result-data="{{ json_encode($results->take(10)) }}"></div>
                 <div id="keywords-count-container" result-data="{{ json_encode($topKeywordsWithCounts) }}"></div>
                 <h5 class="mb-3">Results ({{$results->count()}})</h5>
@@ -126,6 +126,11 @@
             const keywordsContainer = document.getElementById("keywords-container");
             const urlParams = new URLSearchParams(window.location.search);
             const mainSearch = urlParams.get('query') || urlParams.get('keyword') || "Geen idee";
+            const inDepth = urlParams.get('indepth') || 1;
+            if (inDepth == 0) {
+                document.getElementById("word-web-container").style.display = "block";
+                document.getElementById("toggle-word-web").style.display = "block";
+            }
 
             const keywords = parseKeywords(keywordsContainer, mainSearch);
             if (keywords.length > 0 && mainSearch !== "Geen idee") {
@@ -206,7 +211,7 @@
                 .on("click", (event, d) => handleNodeClick(d, mainSearch))
                 .each(function (d, i) {
                     const maxNodeSize = getNodeSize(d.id); 
-                    const maxWidth = maxNodeSize * 2; // Adjust width relative to node size
+                    const maxWidth = maxNodeSize * 1.8; // Adjust width relative to node size
                     const lines = splitTextIntoLines(d.id, maxWidth);
 
                     const lineHeight = 12;
@@ -228,33 +233,35 @@
             }
 
             function getNodeSize(id) {
-                const sizes = [40, 45, 50, 60];
+                const sizes = [42, 52, 62];
                 if (id === mainSearch) {
                     return 62;
                 }
                 if (typeof keywordWithCount === 'object') {
-                    const keys = Object.keys(keywordWithCount);
-                    const values = Object.values(keywordWithCount);
+                    const keywordsFiltered = Object.fromEntries(Object.entries(keywordWithCount).filter(([key]) => key !== mainSearch));
+                    const values = Object.values(keywordsFiltered);
                     const highestCount = Math.max(...values);
+                    const lowestCount = Math.min(...values);
 
-                    const index = keys.indexOf(id);
-                    if (highestCount <= 5){
-                        const count = values[index];
-                        if (count >= 3) {
-                            return sizes[3];
-                        } else if (count >= 2) {
-                            return sizes[2];
-                        } else {
-                            return sizes[1];
+                    if (id in keywordsFiltered) {
+                        const count = keywordsFiltered[id];
+
+                        if (highestCount === lowestCount) {
+                            return sizes[2]; 
                         }
-                    }
-                    if (index !== -1) {
-                        const count = values[index];
-                        if (count >= highestCount / 1.5) {
-                            return sizes[3];
-                        } else if (count >= highestCount / 2) {
+
+                        // Adjust for large outliers
+                        const logHighest = Math.log(highestCount);
+                        const logLowest = Math.log(lowestCount > 0 ? lowestCount : 1);
+                        const logCount = Math.log(count > 0 ? count : 1);
+                        
+                        const normalizedValue = (logCount - logLowest) / (logHighest - logLowest); 
+                        const adjustedValue = Math.sqrt(normalizedValue);
+
+                        // Scale the size based on the count relative to the highest count
+                        if (adjustedValue >= 0.75) {
                             return sizes[2];
-                        } else if (count >= highestCount / 3) {
+                        } else if (adjustedValue >= 0.40) {
                             return sizes[1];
                         } else {
                             return sizes[0];
@@ -277,35 +284,44 @@
             // Navigeer naar nieuwe zoekopdracht
             function handleNodeClick(node, mainSearch) {
                 if (node.id !== mainSearch) {
-                    window.location.href = `/search?query=${encodeURIComponent(node.id)}`;
+                    window.location.href = `/search?query=${encodeURIComponent(node.id)}&indepth=0`;
                 }
             }
 
             function splitTextIntoLines(text, maxWidth) {
-                const isOneWord = text.split(" ").length === 1;
-                const words = text.split(" ");
-
                 const lines = [];
-                let currentLine = "";
+                const words = text.split(" ");
+                const isOneWord = words.length === 1;
 
-                if (isOneWord) {
+                function splitLongWord(word, separator = "-") {
                     let currentIndex = 0;
-                    while (currentIndex < text.length) {
+                    while (currentIndex < word.length) {
                         let nextIndex = currentIndex + 1;
-                        while (
-                            nextIndex <= text.length &&
-                            getTextWidth(text.slice(currentIndex, nextIndex) + "-", "12px Arial") <= maxWidth
-                        ) {
+                        while (nextIndex <= word.length &&getTextWidth(word.slice(currentIndex, nextIndex) + separator, "12px Arial") <= maxWidth) {
                             nextIndex++;
                         }
-                        lines.push(text.slice(currentIndex, nextIndex - 1) + (nextIndex - 1 < text.length ? "-" : ""));
-                        currentIndex = nextIndex - 1; 
+                        lines.push(word.slice(currentIndex, nextIndex - 1) + (nextIndex - 1 < word.length ? separator : ""));
+                        currentIndex = nextIndex - 1;
+                    }
+                }
+
+                if (isOneWord) {
+                    if (text.includes("-")) {
+                        text.split("-").forEach((part, i, parts) => {
+                            const partWithHyphen = i < parts.length - 1 ? `${part}-` : part;
+                            if (getTextWidth(partWithHyphen, "12px Arial") <= maxWidth) {
+                                lines.push(partWithHyphen);
+                            } else {
+                                splitLongWord(partWithHyphen);
+                            }
+                        });
+                    } else {
+                        splitLongWord(text);
                     }
                 } else {
-                    for (let i = 0; i < words.length; i++) {
-                        const word = words[i];
+                    let currentLine = "";
+                    for (const word of words) {
                         const testLine = currentLine ? `${currentLine} ${word}` : word;
-
                         if (getTextWidth(testLine, "12px Arial") <= maxWidth) {
                             currentLine = testLine;
                         } else {
@@ -324,16 +340,11 @@
                 context.font = font;
                 return context.measureText(text).width;
             }
-            
         }
 
         function toggleWordWebVisibility() {
             const wordWebContainer = document.getElementById("word-web-container");
-            if (wordWebContainer.style.display === "none") {
-                wordWebContainer.style.display = "block";
-            } else {
-                wordWebContainer.style.display = "none";
-            }
+            wordWebContainer.style.display = wordWebContainer.style.display === "none" ? "block" : "none";
         }
 
     </script>
