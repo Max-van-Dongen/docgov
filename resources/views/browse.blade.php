@@ -17,8 +17,8 @@
             <!-- Topic 2 -->
             <div class="col">
                 <button class="btn w-100 py-4 border shadow-sm text-center"
-                        onclick="window.location = '/search?query=Gezondheid'">
-                    <i class="ti ti-clipboard-heart fs-1 mb-2 text-primary&indepth=0"></i>
+                        onclick="window.location = '/search?query=Gezondheid&indepth=0'">
+                    <i class="ti ti-clipboard-heart fs-1 mb-2 text-primary"></i>
                     <p class="mb-0">Health & Social Services</p>
                 </button>
             </div>
