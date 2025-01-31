@@ -3,6 +3,7 @@
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\RelevancyController;
 use App\Models\File;
+use App\Models\LLMModel;
 use App\Services\OpenAIService;
 use Illuminate\Support\Facades\Route;
 
@@ -100,5 +101,14 @@ Route::get('/api/stream-results-summary', function (\Illuminate\Http\Request $re
         'Content-Type' => 'text/event-stream',
         'Cache-Control' => 'no-cache',
         'Connection' => 'keep-alive',
+    ]);
+});
+
+Route::get('/unlock-llms', function () {
+    LLMModel::query()->update(['is_generating' => false]);
+
+    // Optionally return or log a success message
+    return response()->json([
+        'message' => 'All LLMs have been unlocked.'
     ]);
 });
