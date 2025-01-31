@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\LLMModel;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class OpenAIService
@@ -134,18 +136,6 @@ class OpenAIService
         return json_decode($response['choices'][0]['message']['content'], true)['response'] ?? [];
     }
 
-    public function generatePersonalisedText($text)
-    {
-        $response = OpenAI::chat()->create([
-            'model' => 'gpt-4o-mini',
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are a helpful assistant that generates concise and personalized descriptions for documents in Dutch. Tailor the description for a man aged 20-30 from The Hague. Focus on what might interest him, making it relatable and engaging, and limit the response to 2-4 sentences.'],
-                ['role' => 'user', 'content' => "Generate a personalized description for this content: {$text}"],
-            ],
-        ]);
-
-        return $response->choices[0]->message->content;
-    }
 
     public function extractKeywords($text)
     {
@@ -187,22 +177,72 @@ class OpenAIService
 
         $personalizedContext = "User details:\n";
         foreach ($sessionData as $key => $value) {
-            $personalizedContext .= ucfirst($key) . ": " . (is_array($value) ? implode(', ', $value) : $value) . "\n";
+            $personalizedContext .= ucfirst($key) . ": "
+                . (is_array($value) ? implode(', ', $value) : $value) . "\n";
         }
 
         $payload = [
-            'model' => $this->bigApiModel,
             'stream' => true,
             'messages' => [
-                ['role' => 'system', 'content' => 'Provide a personalized summary of the given text, considering the user\'s context provided. The summary should be concise and relevant to the user\'s interests, profession, and other details.'],
-                ['role' => 'assistant', 'content' => $personalizedContext],
-                ['role' => 'user', 'content' => $text],
+                [
+                    'role' => 'system',
+                    'content' => 'Provide a personalized summary of the given text, ' .
+                        'considering the user\'s context provided. The summary ' .
+                        'should be concise and relevant to the user\'s interests, ' .
+                        'profession, and other details.'
+                ],
+                [
+                    'role' => 'assistant',
+                    'content' => $personalizedContext
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $text
+                ],
             ],
         ];
 
-        // Stream the response
-        $this->sendStreamingRequest($payload);
+        $modelRecord = null;
+        DB::transaction(function () use (&$modelRecord) {
+            $modelRecord = LLMModel::where('is_generating', false)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$modelRecord) {
+
+                $unavailableMessage = json_encode([
+                    "id" => uniqid("chatcmpl-"),
+                    "object" => "chat.completion.chunk",
+                    "created" => time(),
+                    "model" => "sky-t1-32b-preview",
+                    "system_fingerprint" => "sky-t1-32b-preview",
+                    "choices" => [
+                        [
+                            "index" => 0,
+                            "delta" => ["role" => "assistant", "content" => "AI Service is currently overloaded."],
+                            "logprobs" => null,
+                            "finish_reason" => null,
+                        ],
+                    ],
+                ]);
+                echo "data: {$unavailableMessage}\n\n";
+                flush();
+                return false;
+            }
+
+            $modelRecord->is_generating = true;
+            $modelRecord->save();
+        });
+
+        $payload['model'] = $modelRecord->name;
+
+        try {
+            $this->sendStreamingRequest($payload);
+        } finally {
+            $modelRecord->update(['is_generating' => false]);
+        }
     }
+
 
     public function summarizeSearchResults($text): void
     {
@@ -218,17 +258,12 @@ class OpenAIService
         }
 
         $payload = [
-            'model' => $this->bigApiModel,
             'stream' => true,
             'messages' => [
                 [
                     'role' => 'system',
                     'content' =>
-                        "You are a helpful assistant tasked with providing a concise, unified summary of the given search results. " .
-                        "Use the user's context only to shape the tone of the summary and to highlight what might be most relevant to them. " .
-                        "Do NOT include or reveal any personal details (like the user's name, age, location, etc.) in the summary. " .
-                        "Focus on the key points from all documents, and present them as a coherent overview, do NOT summarize each result on it's own. " .
-                        "You may use short paragraphs or bullet points, and a brief concluding sentence or two. "
+                        "You are a helpful assistant tasked with providing a concise, unified summary..."
                 ],
                 [
                     'role' => 'assistant',
@@ -241,9 +276,47 @@ class OpenAIService
             ],
         ];
 
-        // Stream the response to the client
-        $this->sendStreamingRequest($payload);
+        $modelRecord = null;
+        DB::transaction(function () use (&$modelRecord) {
+            $modelRecord = LLMModel::where('is_generating', false)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$modelRecord) {
+
+                $unavailableMessage = json_encode([
+                    "id" => uniqid("chatcmpl-"),
+                    "object" => "chat.completion.chunk",
+                    "created" => time(),
+                    "model" => "sky-t1-32b-preview",
+                    "system_fingerprint" => "sky-t1-32b-preview",
+                    "choices" => [
+                        [
+                            "index" => 0,
+                            "delta" => ["role" => "assistant", "content" => "AI Service is currently overloaded."],
+                            "logprobs" => null,
+                            "finish_reason" => null,
+                        ],
+                    ],
+                ]);
+                echo "data: {$unavailableMessage}\n\n";
+                flush();
+                return false;
+            }
+
+            $modelRecord->is_generating = true;
+            $modelRecord->save();
+        });
+
+        $payload['model'] = $modelRecord->name;
+
+        try {
+            $this->sendStreamingRequest($payload);
+        } finally {
+            $modelRecord->update(['is_generating' => false]);
+        }
     }
+
 
     private function streamAIServiceAvailability(): bool
     {
@@ -252,7 +325,7 @@ class OpenAIService
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Authorization: Bearer ' . $this->apiKey,
         ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 1); // Set timeout to 2 seconds
+        curl_setopt($ch, CURLOPT_TIMEOUT, 1);
 
         $response = curl_exec($ch);
 
