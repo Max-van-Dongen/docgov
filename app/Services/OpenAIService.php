@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\LLMModel;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -185,52 +186,58 @@ class OpenAIService
             'stream' => true,
             'messages' => [
                 [
-                    'role' => 'system',
+                    'role'    => 'system',
                     'content' => 'Provide a personalized summary of the given text, ' .
                         'considering the user\'s context provided. The summary ' .
                         'should be concise and relevant to the user\'s interests, ' .
                         'profession, and other details.'
                 ],
                 [
-                    'role' => 'assistant',
+                    'role'    => 'assistant',
                     'content' => $personalizedContext
                 ],
                 [
-                    'role' => 'user',
+                    'role'    => 'user',
                     'content' => $text
                 ],
             ],
         ];
 
         $modelRecord = null;
+
         DB::transaction(function () use (&$modelRecord) {
-            $modelRecord = LLMModel::where('is_generating', false)
+            $modelRecord = LLMModel::where(function ($query) {
+                $query->whereNull('generating_since')
+                    ->orWhere('generating_since', '<', Carbon::now()->subSeconds(5));
+            })
                 ->lockForUpdate()
                 ->first();
 
             if (!$modelRecord) {
-
                 $unavailableMessage = json_encode([
-                    "id" => uniqid("chatcmpl-"),
-                    "object" => "chat.completion.chunk",
-                    "created" => time(),
-                    "model" => "sky-t1-32b-preview",
-                    "system_fingerprint" => "sky-t1-32b-preview",
-                    "choices" => [
+                    "id"                => uniqid("chatcmpl-"),
+                    "object"            => "chat.completion.chunk",
+                    "created"           => time(),
+                    "model"             => "sky-t1-32b-preview",
+                    "system_fingerprint"=> "sky-t1-32b-preview",
+                    "choices"           => [
                         [
-                            "index" => 0,
-                            "delta" => ["role" => "assistant", "content" => "AI Service is currently overloaded."],
-                            "logprobs" => null,
+                            "index"         => 0,
+                            "delta"         => [
+                                "role"    => "assistant",
+                                "content" => "AI Service is currently overloaded."
+                            ],
+                            "logprobs"      => null,
                             "finish_reason" => null,
                         ],
                     ],
                 ]);
                 echo "data: {$unavailableMessage}\n\n";
                 flush();
-                return false;
+                exit();
             }
 
-            $modelRecord->is_generating = true;
+            $modelRecord->generating_since = Carbon::now();
             $modelRecord->save();
         });
 
@@ -239,10 +246,9 @@ class OpenAIService
         try {
             $this->sendStreamingRequest($payload);
         } finally {
-            $modelRecord->update(['is_generating' => false]);
+            $modelRecord->update(['generating_since' => null]);
         }
     }
-
 
     public function summarizeSearchResults($text): void
     {
@@ -277,34 +283,40 @@ class OpenAIService
         ];
 
         $modelRecord = null;
+
         DB::transaction(function () use (&$modelRecord) {
-            $modelRecord = LLMModel::where('is_generating', false)
+            $modelRecord = LLMModel::where(function ($query) {
+                $query->whereNull('generating_since')
+                    ->orWhere('generating_since', '<', Carbon::now()->subSeconds(5));
+            })
                 ->lockForUpdate()
                 ->first();
 
             if (!$modelRecord) {
-
                 $unavailableMessage = json_encode([
-                    "id" => uniqid("chatcmpl-"),
-                    "object" => "chat.completion.chunk",
-                    "created" => time(),
-                    "model" => "sky-t1-32b-preview",
-                    "system_fingerprint" => "sky-t1-32b-preview",
-                    "choices" => [
+                    "id"                => uniqid("chatcmpl-"),
+                    "object"            => "chat.completion.chunk",
+                    "created"           => time(),
+                    "model"             => "sky-t1-32b-preview",
+                    "system_fingerprint"=> "sky-t1-32b-preview",
+                    "choices"           => [
                         [
-                            "index" => 0,
-                            "delta" => ["role" => "assistant", "content" => "AI Service is currently overloaded."],
-                            "logprobs" => null,
+                            "index"         => 0,
+                            "delta"         => [
+                                "role"    => "assistant",
+                                "content" => "AI Service is currently overloaded."
+                            ],
+                            "logprobs"      => null,
                             "finish_reason" => null,
                         ],
                     ],
                 ]);
                 echo "data: {$unavailableMessage}\n\n";
                 flush();
-                return false;
+                exit();
             }
 
-            $modelRecord->is_generating = true;
+            $modelRecord->generating_since = Carbon::now();
             $modelRecord->save();
         });
 
@@ -313,7 +325,7 @@ class OpenAIService
         try {
             $this->sendStreamingRequest($payload);
         } finally {
-            $modelRecord->update(['is_generating' => false]);
+            $modelRecord->update(['generating_since' => null]);
         }
     }
 

@@ -10,6 +10,7 @@ class LLMModel extends Model
 
     protected $fillable = [
         'name',
-        'is_generating'
+        'is_generating',
+        'generating_since',
     ];
 }
