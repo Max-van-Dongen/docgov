@@ -26,7 +26,11 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-RB0QS140E3"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
         gtag('js', new Date());
 
         gtag('config', 'G-RB0QS140E3');
@@ -85,7 +89,6 @@
             toggleTheme(themeStitcher.checked);
         }
     });
-
 </script>
 <div class="container pb-3">
     <div class="d-flex align-items-center justify-content-between">
@@ -99,7 +102,6 @@
             <a href="/" class="btn btn-link" style="visibility: hidden">
                 <i class="ti ti-user"></i> YOU
             </a>
-
         </div>
 
         <!-- Logo and Title -->
@@ -119,7 +121,6 @@
             <a href="/" class="btn btn-link">
                 <i class="ti ti-home"></i> Home
             </a>
-
         </div>
     </div>
     @isset($search)
@@ -141,8 +142,8 @@
                         value="{{ request('query') }}"
                     />
                     <span class="input-group-text border-0" id="search-addon">
-                <i class="ti ti-search"></i>
-            </span>
+                        <i class="ti ti-search"></i>
+                    </span>
                 </div>
             </div>
         </form>
@@ -181,55 +182,63 @@
 <!-- Search Bar -->
 @yield("content")
 
+<!-- Footer with GitHub link -->
+<footer class="text-center mt-4 py-2">
+    <p class="mb-0">
+        <a href="https://github.com/Max-van-Dongen/docgov" target="_blank">
+            <i class="ti ti-brand-github"></i> View this project on GitHub
+        </a>
+    </p>
+</footer>
 
 <!-- MDB5 JS -->
-
 <script
     type="text/javascript"
     src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.1.0/mdb.umd.min.js"
 ></script>
 @isset($buttons)
-<script>
-    function setFormAction() {
-        // Grab the form
-        const form = document.getElementById('searchForm');
-        // Check which radio is selected
-        if (document.getElementById('inDepth').checked) {
-            form.action = '/search';
-        } else {
-            form.action = '/summary';
-        }
-        // Let the form submit
-        return true;
-    }
-    document.addEventListener('DOMContentLoaded', function () {
-        const quickSummaryRadio = document.getElementById('quickSummary');
-        const inDepthRadio = document.getElementById('inDepth');
-        const searchForm = document.getElementById('searchForm');
-        const searchInput = document.querySelector('input[name="query"]');
-
-        // Helper function to check if search query is non-empty
-        function queryIsNotEmpty() {
-            return searchInput.value.trim() !== '';
+    <script>
+        function setFormAction() {
+            // Grab the form
+            const form = document.getElementById('searchForm');
+            // Check which radio is selected
+            if (document.getElementById('inDepth').checked) {
+                form.action = '/search';
+            } else {
+                form.action = '/summary';
+            }
+            // Let the form submit
+            return true;
         }
 
-        // Listen for changes on the Quick Summary radio
-        quickSummaryRadio.addEventListener('change', function () {
-            if (queryIsNotEmpty()) {
-                setFormAction();   // sets the appropriate form action
-                searchForm.submit();
-            }
-        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const quickSummaryRadio = document.getElementById('quickSummary');
+            const inDepthRadio = document.getElementById('inDepth');
+            const searchForm = document.getElementById('searchForm');
+            const searchInput = document.querySelector('input[name="query"]');
 
-        // Listen for changes on the In-Depth radio
-        inDepthRadio.addEventListener('change', function () {
-            if (queryIsNotEmpty()) {
-                setFormAction();   // sets the appropriate form action
-                searchForm.submit();
+            // Helper function to check if search query is non-empty
+            function queryIsNotEmpty() {
+                return searchInput.value.trim() !== '';
             }
+
+            // Listen for changes on the Quick Summary radio
+            quickSummaryRadio.addEventListener('change', function () {
+                if (queryIsNotEmpty()) {
+                    setFormAction();
+                    searchForm.submit();
+                }
+            });
+
+            // Listen for changes on the In-Depth radio
+            inDepthRadio.addEventListener('change', function () {
+                if (queryIsNotEmpty()) {
+                    setFormAction();
+                    searchForm.submit();
+                }
+            });
         });
-    });
-</script>
+    </script>
 @endisset
 </body>
 </html>
