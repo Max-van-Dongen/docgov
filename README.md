@@ -1,5 +1,9 @@
 # DocGov
 
+## Demo
+
+[YouTube demo](https://www.youtube.com/watch?v=Sx69bTNTL94)
+
 DocGov is a Laravel web application that improves transparency and accessibility in governance by collecting public government documents and making them searchable, enriched, and comparable.
 
 In addition to browsing documents, DocGov includes an **AI-powered ingestion pipeline** that can automatically scrape document listings, fetch PDFs, extract text, generate summaries and metadata, and store entities/keywords for better discovery.
